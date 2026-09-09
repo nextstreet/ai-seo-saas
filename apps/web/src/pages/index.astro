@@ -1,0 +1,29 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+
+const pageTypes = [
+  ['/custom/custom-ita-bag-design/', 'Customize', 'Compare display, insert, material, sampling, and production decisions.'],
+  ['/guides/how-to-design-an-ita-bag/', 'Learn', 'Follow a practical collection-first Ita Bag design process.'],
+  ['/studio/', 'Inspect the V1 loop', 'See how a topic becomes an explainable candidate and review-required brief.'],
+];
+---
+
+<BaseLayout
+  title="Custom Ita Bag Ideas, Guides, and Design Concepts"
+  description="Explore intent-led Ita Bag guides, customization options, and community-tested design concepts."
+>
+  <p class="eyebrow">SEO-first validation tenant</p>
+  <h1>A focused Ita Bag topic system, not an article factory.</h1>
+  <p class="lede">
+    This starter proves the page architecture before automation: topic graph,
+    intent, page type, reviewed content, visual assets, and measurable feedback.
+  </p>
+  <section class="grid" aria-label="V1 content areas">
+    {pageTypes.map(([href, title, copy]) => (
+      <a class="card card-link" href={href}>
+        <h2>{title}</h2>
+        <p>{copy}</p>
+      </a>
+    ))}
+  </section>
+</BaseLayout>

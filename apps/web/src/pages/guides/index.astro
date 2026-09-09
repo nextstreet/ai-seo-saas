@@ -1,0 +1,15 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+
+const pages = await getCollection('pages', ({ data }) => data.reviewed && data.pageType === 'guide');
+---
+
+<BaseLayout title="Ita Bag Design Guides" description="Reviewed, practical guides for planning Ita Bag layouts, formats, inserts, protection, and custom project requirements." canonicalPath="/guides/">
+  <p class="eyebrow">Guides</p>
+  <h1>Make each design decision with context.</h1>
+  <p class="lede">Focused guidance for turning a collection idea into a practical display and carrying system.</p>
+  <section class="grid">
+    {pages.map(({ data }) => <a class="card card-link" href={data.canonicalPath}><h2>{data.title}</h2><p>{data.description}</p></a>)}
+  </section>
+</BaseLayout>

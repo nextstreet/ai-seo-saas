@@ -1,0 +1,23 @@
+{
+  "name": "@ai-seo/web",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "typecheck": "astro check",
+    "lint": "astro check",
+    "test": "vitest run --passWithNoTests"
+  },
+  "dependencies": {
+    "@ai-seo/shared": "workspace:*",
+    "@astrojs/sitemap": "^3.6.0",
+    "astro": "^5.13.0"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.4",
+    "typescript": "^5.9.2",
+    "vitest": "^3.2.4"
+  }
+}

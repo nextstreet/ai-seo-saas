@@ -1,0 +1,95 @@
+---
+import { buildBrief, transitionCandidate } from '../../../../../packages/content-engine/src/index';
+import {
+  InMemoryTopicGraphRepository,
+  scoreOpportunity,
+  TopicGraphService,
+} from '../../../../../packages/seo-engine/src/index';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+
+const tenantId = 'ita-bag-lab';
+const graphService = new TopicGraphService(new InMemoryTopicGraphRepository());
+const topics = [
+  { id: 'ita-bag', tenantId, name: 'Ita Bag', slug: 'ita-bag', entityType: 'product_category' },
+  { id: 'window', tenantId, name: 'Display Window', slug: 'display-window', entityType: 'feature' },
+  { id: 'insert', tenantId, name: 'Detachable Insert', slug: 'detachable-insert', entityType: 'component' },
+];
+for (const topic of topics) await graphService.createTopic(topic);
+for (const [id, targetTopicId, relationType] of [
+  ['bag-window', 'window', 'has_feature'],
+  ['bag-insert', 'insert', 'has_component'],
+] as const) {
+  await graphService.linkTopics({
+    id,
+    tenantId,
+    sourceTopicId: 'ita-bag',
+    targetTopicId,
+    relationType,
+    weight: 100,
+  });
+}
+const relatedTopics = await graphService.listRelated(tenantId, 'ita-bag');
+
+const decision = scoreOpportunity({
+  searchDemand: 74,
+  commercialValue: 78,
+  uniqueness: 82,
+  informationGain: 86,
+  cannibalizationRisk: 12,
+  topicFit: 94,
+  hasMatchingPage: false,
+  recommendedPageType: 'customization',
+});
+const approved = transitionCandidate(
+  { id: 'custom-design', tenantId, status: 'candidate', reason: decision.reason },
+  'approved',
+  'Editor approved the intent, page type, and source facts for briefing.',
+);
+const brief = buildBrief({
+  tenantId,
+  primaryTopic: 'Custom Ita Bag design',
+  primaryIntent: 'Compare customization options and prepare a project brief',
+  pageType: decision.recommendedPageType,
+  facts: ['A removable insert supports rearrangement.', 'Production details require supplier confirmation.'],
+  relatedTopics: relatedTopics.map(({ name }) => name),
+});
+---
+
+<BaseLayout
+  title="V1 SEO Workflow Studio"
+  description="Inspect the first working AI SEO SaaS loop: tenant-scoped topics, an explainable candidate decision, an approved brief, and reviewed static pages."
+  canonicalPath="/studio/"
+>
+  <p class="eyebrow">Developer view · local deterministic demo</p>
+  <h1>The first review-controlled loop works.</h1>
+  <p class="lede">This page executes the reusable packages at build time. It does not connect to production data or publish generated content.</p>
+
+  <section class="grid" aria-label="Workflow stages">
+    <article class="card">
+      <span class="pill">1 · Topic graph</span>
+      <h2>{topics[0].name}</h2>
+      <p>{relatedTopics.length} related topics found with tenant-scoped, cycle-safe traversal.</p>
+      <ul>{relatedTopics.map((topic) => <li>{topic.name} · {topic.entityType}</li>)}</ul>
+    </article>
+    <article class="card">
+      <span class="pill">2 · Candidate</span>
+      <h2>{decision.action} · {decision.opportunityScore}/100</h2>
+      <p>{decision.reason}</p>
+      <p><strong>Page type:</strong> {decision.recommendedPageType}</p>
+    </article>
+    <article class="card">
+      <span class="pill">3 · Approval</span>
+      <h2>{approved.transition.fromStatus} → {approved.transition.toStatus}</h2>
+      <p>{approved.transition.reason}</p>
+      <p>Publishing still requires draft and review transitions.</p>
+    </article>
+    <article class="card">
+      <span class="pill">4 · Brief</span>
+      <h2>{brief.primaryTopic}</h2>
+      <p>{brief.objective}</p>
+      <ul>{brief.requiredSections.map((section) => <li>{section}</li>)}</ul>
+    </article>
+  </section>
+
+  <p><a href="/custom/custom-ita-bag-design/">Open the reviewed customization page →</a></p>
+</BaseLayout>

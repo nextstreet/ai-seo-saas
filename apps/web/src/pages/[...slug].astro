@@ -1,0 +1,108 @@
+---
+import { getCollection, render, type CollectionEntry } from 'astro:content';
+import BaseLayout from '../layouts/BaseLayout.astro';
+
+export async function getStaticPaths() {
+  const pages = await getCollection('pages', ({ data }) => data.reviewed);
+  const topicIds = new Set(pages.map(({ data }) => data.topicId));
+  for (const page of pages) {
+    const missingTopicId = page.data.relatedTopicIds.find((topicId) => !topicIds.has(topicId));
+    if (missingTopicId) {
+      throw new Error(`Reviewed page ${page.id} links to missing topic ${missingTopicId}.`);
+    }
+  }
+  return pages.map((page) => ({
+    params: { slug: page.data.canonicalPath.replace(/^\//, '').replace(/\/$/, '') },
+    props: { page },
+  }));
+}
+
+interface Props {
+  page: CollectionEntry<'pages'>;
+}
+
+const { page } = Astro.props;
+const { Content } = await render(page);
+const relatedPages = (await getCollection('pages', ({ data }) => data.reviewed)).filter(
+  ({ data }) => page.data.relatedTopicIds.includes(data.topicId),
+);
+const site = Astro.site ?? Astro.url;
+const breadcrumbItems = page.data.breadcrumbs.map((item, index) => ({
+  '@type': 'ListItem',
+  position: index + 1,
+  name: item.label,
+  item: new URL(item.href, site).href,
+}));
+const primarySchema = page.data.pageType === 'guide'
+  ? {
+      '@type': 'HowTo',
+      name: page.data.title,
+      description: page.data.description,
+      step: page.data.steps.map((step) => ({ '@type': 'HowToStep', ...step })),
+    }
+  : {
+      '@type': 'WebPage',
+      name: page.data.title,
+      description: page.data.description,
+      about: page.data.primaryTopic,
+    };
+const schema = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    primarySchema,
+    { '@type': 'BreadcrumbList', itemListElement: breadcrumbItems },
+  ],
+};
+---
+
+<BaseLayout
+  title={page.data.title}
+  description={page.data.description}
+  canonicalPath={page.data.canonicalPath}
+  schema={schema}
+>
+  <nav aria-label="Breadcrumb">
+    <ol class="breadcrumbs">
+      {page.data.breadcrumbs.map((item, index) => (
+        <li>
+          {index === page.data.breadcrumbs.length - 1
+            ? <span aria-current="page">{item.label}</span>
+            : <a href={item.href}>{item.label}</a>}
+        </li>
+      ))}
+    </ol>
+  </nav>
+
+  <p class="eyebrow">Reviewed {page.data.pageType.replace('_', ' ')} page</p>
+  <h1>{page.data.title}</h1>
+  <p class="lede">{page.data.description}</p>
+
+  {page.data.pageType === 'customization' && (
+    <section aria-labelledby="option-heading">
+      <h2 id="option-heading">Decisions to make</h2>
+      <div class="grid">
+        {page.data.options.map((option) => (
+          <article class="card"><h3>{option.label}</h3><p>{option.detail}</p></article>
+        ))}
+      </div>
+      <h2>Project path</h2>
+      <ol class="steps">{page.data.process.map((step) => <li>{step}</li>)}</ol>
+    </section>
+  )}
+
+  {page.data.pageType === 'guide' && (
+    <section aria-labelledby="steps-heading">
+      <h2 id="steps-heading">At a glance</h2>
+      <ol class="steps">
+        {page.data.steps.map((step) => <li><strong>{step.name}:</strong> {step.text}</li>)}
+      </ol>
+    </section>
+  )}
+
+  <article class="prose"><Content /></article>
+
+  <aside aria-labelledby="related-heading">
+    <h2 id="related-heading">Related reviewed pages</h2>
+    <ul>{relatedPages.map(({ data }) => <li><a href={data.canonicalPath}>{data.title}</a></li>)}</ul>
+  </aside>
+</BaseLayout>
