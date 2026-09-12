@@ -1,0 +1,32 @@
+---
+import StoreLayout from '@/components/StoreLayout.astro';
+import { collection } from '@/lib/collection';
+const baseVotes: Record<string, number> = { sweetheart: 42, 'mint-story': 31, 'after-hours': 27 };
+---
+<StoreLayout title="Ita Bag Design Studio" description="Save and vote on original ita bag concepts, then use a favorite as the starting point for a custom brief.">
+  <section class="studio-hero"><div class="studio-copy"><p class="eyebrow">Community design studio</p><h1>Which idea should move forward?</h1><p>Save the directions that fit you and vote for the concepts you want to see developed further.</p><a class="text-link" href="#concepts">See the concepts <span aria-hidden="true">&darr;</span></a></div><div class="studio-mosaic"><img src="/images/heart.webp" alt="Pink heart-window ita backpack concept" /><img src="/images/mint.webp" alt="Mint photocard ita bag concept" /><img src="/images/noir.webp" alt="Black celestial ita tote concept" /></div></section>
+  <section class="wrap section" id="concepts"><div class="section-head"><div><p class="eyebrow">Concept vote / Round 01</p><h2>Choose with intention.</h2></div><p>Votes and saves are stored on this device in the current prototype. Shared community totals can connect to the existing data layer later.</p></div>
+    <div class="filters"><label>Show<select id="show"><option value="all">All concepts</option><option value="saved">My saved designs</option><option value="voted">My votes</option></select></label><label>Mood<select id="mood"><option value="">All moods</option><option>Playful</option><option>Soft</option><option>Minimal</option></select></label><span id="studio-count" class="small filter-count"></span></div>
+    <div class="three">{collection.map((item) => <article class="concept-card" data-design={item.slug} data-mood={item.mood}><a class="design-image" href={`/designs/${item.slug}`}><img src={item.image} alt={`${item.name} AI concept`} width="1024" height="1024" /><span class="tag">AI CONCEPT</span><span class="image-action">View</span></a><div class="card-line"><h3>{item.name}</h3><span class="small">{item.mood}</span></div><p class="card-description">{item.description}</p><div class="actions"><button data-vote={item.slug} aria-pressed="false">Vote <span class="vote-count" data-count={item.slug}>{baseVotes[item.slug]}</span></button><button data-save={item.slug} aria-pressed="false">Save design</button></div><a class="text-link" href={`/customize?design=${item.slug}`}>Create from this concept <span aria-hidden="true">&rarr;</span></a></article>)}</div>
+    <div id="empty" class="empty" hidden><h2>Nothing here yet.</h2><p>Change the filter or save a concept to build your shortlist.</p></div><p id="feedback" class="status" role="status"></p>
+  </section>
+  <section class="section green-band"><div class="wrap"><div class="section-head"><div><p class="eyebrow">What the signal means</p><h2>Feedback becomes product direction.</h2></div></div><div class="signal-grid"><article class="signal"><strong>Votes reveal demand</strong><p>Compare interest across bag shape, palette and display type before developing more concepts.</p></article><article class="signal"><strong>Saves reveal intent</strong><p>A saved concept is a stronger signal that someone may return to create a brief.</p></article><article class="signal"><strong>Briefs reveal requirements</strong><p>Quantity, occasion and priority show what future product options need to solve.</p></article></div></div></section>
+</StoreLayout>
+<script is:inline define:vars={{ baseVotes }}>
+  const storageKey = 'ita-favorites';
+  let state = { saved: [], votes: [] };
+  try { const parsed = JSON.parse(localStorage.getItem(storageKey) || '{}'); state = { saved: Array.isArray(parsed.saved) ? parsed.saved : [], votes: Array.isArray(parsed.votes) ? parsed.votes : [] }; } catch {}
+  const show = document.querySelector('#show');
+  const mood = document.querySelector('#mood');
+  if (new URLSearchParams(location.search).has('saved')) show.value = 'saved';
+  function render() {
+    document.querySelectorAll('[data-save],[data-vote]').forEach((button) => { const isSave = Boolean(button.dataset.save); const id = button.dataset.save || button.dataset.vote; const active = state[isSave ? 'saved' : 'votes'].includes(id); button.setAttribute('aria-pressed', String(active)); if (isSave) button.childNodes[0].textContent = active ? 'Saved ' : 'Save design '; });
+    document.querySelectorAll('[data-count]').forEach((count) => { count.textContent = String(baseVotes[count.dataset.count] + (state.votes.includes(count.dataset.count) ? 1 : 0)); });
+    let visible = 0;
+    document.querySelectorAll('[data-design]').forEach((card) => { const modeMatch = show.value === 'all' || state[show.value].includes(card.dataset.design); const moodMatch = !mood.value || mood.value === card.dataset.mood; card.hidden = !(modeMatch && moodMatch); if (!card.hidden) visible += 1; });
+    document.querySelector('#studio-count').textContent = `${visible} concept${visible === 1 ? '' : 's'}`;
+    document.querySelector('#empty').hidden = visible > 0;
+  }
+  document.querySelectorAll('[data-save],[data-vote]').forEach((button) => button.addEventListener('click', () => { const key = button.dataset.save ? 'saved' : 'votes'; const id = button.dataset.save || button.dataset.vote; state[key] = state[key].includes(id) ? state[key].filter((value) => value !== id) : [...state[key], id]; try { localStorage.setItem(storageKey, JSON.stringify(state)); } catch {} document.querySelector('#feedback').textContent = key === 'votes' ? 'Your vote has been updated.' : 'Your shortlist has been updated.'; render(); }));
+  show.addEventListener('change', render); mood.addEventListener('change', render); render();
+</script>

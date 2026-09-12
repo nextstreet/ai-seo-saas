@@ -1,0 +1,91 @@
+---
+import BaseLayout from '@/components/BaseLayout.astro';
+import { getSiteConfig, homeSectionKeys } from '@/lib/site-config';
+const config = await getSiteConfig();
+const sectionLabels = { browse: 'Browse paths', collection: 'Concept collection', process: 'Custom process', decision: 'Decision guide', community: 'Community signals', guides: 'Field notes' };
+---
+<BaseLayout title="Site settings | Ita SEO OS" description="Control public site branding, navigation, appearance and homepage layout.">
+  <section class="shell hero admin-hero" style="grid-template-columns: 1fr auto;">
+    <div><p class="kicker">Presentation control</p><h1>Site settings</h1><p class="lede">Manage the public storefront without changing templates. Settings are tenant-specific and published through the protected server API.</p></div>
+    <a class="button secondary" href="/admin">Content console</a>
+  </section>
+
+  <form class="shell settings" id="site-settings">
+    <section class="card setting-block"><div><p class="kicker">Identity</p><h2>Brand and navigation</h2></div><div class="form-grid">
+      <label>Brand name<input name="brand.name" value={config.brand.name} required /></label><label>Brand suffix<input name="brand.suffix" value={config.brand.suffix} required /></label>
+      <label class="wide">Brand description<textarea name="brand.tagline" rows="2">{config.brand.tagline}</textarea></label>
+      {Object.entries(config.navigation).map(([key, value]) => <label>{key.replace(/([A-Z])/g, ' $1')}<input name={`navigation.${key}`} value={value} required /></label>)}
+    </div></section>
+
+    <section class="card setting-block"><div><p class="kicker">First viewport</p><h2>Homepage hero</h2></div><div class="form-grid">
+      <label>Eyebrow<input name="hero.eyebrow" value={config.hero.eyebrow} /></label><label>Image path<input name="hero.image" value={config.hero.image} /></label>
+      <label class="wide">Headline<textarea name="hero.title" rows="2">{config.hero.title}</textarea></label><label class="wide">Description<textarea name="hero.description" rows="3">{config.hero.description}</textarea></label>
+      <label>Primary label<input name="hero.primaryLabel" value={config.hero.primaryLabel} /></label><label>Primary link<input name="hero.primaryHref" value={config.hero.primaryHref} /></label>
+      <label>Secondary label<input name="hero.secondaryLabel" value={config.hero.secondaryLabel} /></label><label>Secondary link<input name="hero.secondaryHref" value={config.hero.secondaryHref} /></label>
+      <label class="wide">Benefit strip, one item per line<textarea name="benefits" rows="4">{config.benefits.join('\n')}</textarea></label>
+      <label>Social preview image<input name="seo.ogImage" value={config.seo.ogImage} /></label><label class="switch"><input type="checkbox" name="seo.indexable" checked={config.seo.indexable} /> Allow search indexing</label>
+      <label>Footer eyebrow<input name="footer.eyebrow" value={config.footer.eyebrow} /></label><label>Footer headline<input name="footer.title" value={config.footer.title} /></label>
+    </div></section>
+
+    <section class="card setting-block"><div><p class="kicker">System</p><h2>Theme and density</h2></div><div class="color-grid">
+      {Object.entries(config.theme).map(([key, value]) => <label><span>{key.replace(/([A-Z])/g, ' $1')}</span><span class="color-control"><input type="color" name={`theme.${key}`} value={value} /><code>{value}</code></span></label>)}
+    </div><div class="form-grid compact-grid">
+      <label>Content width<input type="number" name="layout.contentMax" min="960" max="1600" step="20" value={config.layout.contentMax} /></label>
+      <label>Section spacing<input type="number" name="layout.sectionSpacing" min="48" max="120" step="4" value={config.layout.sectionSpacing} /></label>
+      <label>Card columns<select name="layout.cardColumns"><option value="2" selected={config.layout.cardColumns === 2}>2</option><option value="3" selected={config.layout.cardColumns === 3}>3</option><option value="4" selected={config.layout.cardColumns === 4}>4</option></select></label>
+    </div></section>
+
+    <section class="card setting-block"><div><p class="kicker">Composition</p><h2>Homepage sections</h2></div><div class="section-list">
+      {config.home.sectionOrder.map((key, index) => <div class="section-row"><strong>{sectionLabels[key]}</strong><label class="switch"><input type="checkbox" name={`visible.${key}`} checked={config.home.visible[key]} /> Visible</label><label>Position<select name={`order.${key}`}>{homeSectionKeys.map((_, optionIndex) => <option value={optionIndex + 1} selected={optionIndex === index}>{optionIndex + 1}</option>)}</select></label></div>)}
+    </div></section>
+
+    <section class="save-bar"><label>Admin token<input type="password" id="admin-token" autocomplete="current-password" placeholder="Required to publish" /></label><button type="submit">Publish settings</button><span id="save-status" role="status"></span></section>
+  </form>
+
+  <script>
+    const form = document.querySelector<HTMLFormElement>('#site-settings');
+    const status = document.querySelector<HTMLElement>('#save-status');
+    form?.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      if (!status) return;
+      status.textContent = 'Publishing...';
+      const data = new FormData(form);
+      const readGroup = (prefix: string) => Object.fromEntries([...data.entries()].filter(([key]) => key.startsWith(`${prefix}.`)).map(([key, value]) => [key.slice(prefix.length + 1), value]));
+      const order = Object.entries(readGroup('order')).sort((a, b) => Number(a[1]) - Number(b[1])).map(([key]) => key);
+      const visible = Object.fromEntries(['browse', 'collection', 'process', 'decision', 'community', 'guides'].map((key) => [key, data.has(`visible.${key}`)]));
+      const payload = { brand: readGroup('brand'), navigation: readGroup('navigation'), hero: readGroup('hero'), theme: readGroup('theme'), footer: readGroup('footer'), seo: { ...readGroup('seo'), indexable: data.has('seo.indexable') }, benefits: String(data.get('benefits') || '').split('\n').map((item) => item.trim()).filter(Boolean), layout: readGroup('layout'), home: { sectionOrder: order, visible } };
+      const token = (document.querySelector<HTMLInputElement>('#admin-token')?.value || '');
+      try {
+        const response = await fetch('/api/admin/site-settings', { method: 'POST', headers: { 'content-type': 'application/json', authorization: `Bearer ${token}` }, body: JSON.stringify(payload) });
+        const result = await response.json();
+        status.textContent = response.ok ? 'Published. Refresh the storefront to review it.' : result.error || 'Publishing failed.';
+      } catch { status.textContent = 'The server could not be reached.'; }
+    });
+  </script>
+</BaseLayout>
+
+<style>
+  .admin-hero { align-items: end; }
+  .settings { display: grid; gap: 20px; padding-bottom: 100px; }
+  .setting-block { display: grid; grid-template-columns: minmax(190px,.42fr) 1fr; gap: 36px; padding: 28px; }
+  .setting-block h2 { margin: 0; font-size: 1.35rem; }
+  .form-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 18px; }
+  .form-grid .wide { grid-column: 1/-1; }
+  label { display: grid; gap: 7px; color: #55615c; font-size: .78rem; font-weight: 700; text-transform: capitalize; }
+  input, textarea, select { width: 100%; border: 1px solid #ccd4d0; border-radius: 3px; background: white; padding: 10px 11px; color: #17201c; font: inherit; font-weight: 400; text-transform: none; }
+  textarea { resize: vertical; }
+  .color-grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 12px; }
+  .color-control { display: flex; align-items: center; gap: 8px; border: 1px solid #d7ddd9; padding: 5px 8px; }
+  .color-control input { width: 34px; height: 28px; padding: 0; border: 0; }
+  .color-control code { font-size: .72rem; }
+  .compact-grid { margin-top: 22px; grid-template-columns: repeat(3,minmax(0,1fr)); }
+  .section-list { display: grid; }
+  .section-row { display: grid; grid-template-columns: 1fr 100px 110px; gap: 20px; align-items: center; padding: 12px 0; border-bottom: 1px solid #e1e5e2; }
+  .section-row label { display: flex; align-items: center; gap: 7px; }
+  .section-row input[type="checkbox"] { width: 16px; }
+  .save-bar { position: sticky; bottom: 16px; z-index: 4; display: grid; grid-template-columns: minmax(220px,320px) auto 1fr; gap: 16px; align-items: end; background: #163f34; color: white; padding: 18px 22px; box-shadow: 0 12px 32px #0003; }
+  .save-bar label { color: white; }
+  .save-bar button { min-height: 40px; border: 0; background: #fff; color: #163f34; padding: 0 18px; font-weight: 800; cursor: pointer; }
+  #save-status { align-self: center; font-size: .85rem; }
+  @media(max-width:760px){.setting-block{grid-template-columns:1fr}.form-grid,.color-grid,.compact-grid{grid-template-columns:1fr}.section-row{grid-template-columns:1fr 90px 90px}.save-bar{grid-template-columns:1fr;position:static}}
+</style>

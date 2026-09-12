@@ -1,0 +1,69 @@
+---
+import BaseLayout from '@/components/BaseLayout.astro';
+import { getCandidates, getSystemSnapshot } from '@/lib/data';
+
+const candidates = await getCandidates();
+const snapshot = getSystemSnapshot();
+const sorted = [...candidates].sort((a, b) => b.opportunityScore + b.qualityScore - (a.opportunityScore + a.qualityScore));
+---
+
+<BaseLayout title="CMS Console | Ita SEO OS" description="Manage candidate content, quality gates, topic graph, and publish readiness for the Custom Ita Bag SEO system.">
+  <section class="shell hero" style="grid-template-columns: 1fr;">
+    <div>
+      <h1>CMS Console</h1>
+      <p class="lede">Candidate-first content management for the Custom Ita Bag validation site. The V1 rule is simple: candidates can scale; publishing still requires intent difference, assets, and buyer value.</p>
+      <p><a class="button" href="/admin/site">Manage storefront settings</a></p>
+    </div>
+  </section>
+
+  <section class="shell split band">
+    <aside class="sidebar">
+      <div class="card">
+        <h3>Tenant</h3>
+        <p>{snapshot.tenant.name}</p>
+        <div class="pillrow">
+          <span class="pill">{snapshot.topics.length} topics</span>
+          <span class="pill">{snapshot.entities.length} entities</span>
+          <span class="pill">{snapshot.products.length} products</span>
+          <span class="pill">{snapshot.designs.length} designs</span>
+          <span class="pill">{snapshot.materials.length} materials</span>
+          <span class="pill">{snapshot.intents.length} intents</span>
+        </div>
+      </div>
+    </aside>
+
+    <div>
+      <h2>Candidate Content</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Candidate</th>
+            <th>Type</th>
+            <th>Scores</th>
+            <th>Gate</th>
+          </tr>
+        </thead>
+        <tbody>
+          {sorted.map((candidate) => (
+            <tr>
+              <td>
+                <strong>{candidate.title}</strong>
+                <div class="meta">{candidate.primaryKeyword}</div>
+                <div class="meta">/{candidate.slug}</div>
+              </td>
+              <td>{candidate.pageType.replaceAll('_', ' ')}</td>
+              <td>
+                <div><span class="score">{candidate.opportunityScore}</span> opportunity</div>
+                <div><span class="score">{candidate.qualityScore}</span> quality</div>
+              </td>
+              <td>
+                <span class="pill">{candidate.status}</span>
+                <p class="meta" style="margin-top: 8px;">{candidate.qualityGate.notes[0]}</p>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  </section>
+</BaseLayout>

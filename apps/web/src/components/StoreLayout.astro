@@ -1,0 +1,90 @@
+---
+import '@/styles/store.css';
+import { getSiteConfig, type SiteConfig } from '@/lib/site-config';
+interface Props { title:string; description?:string; config?: SiteConfig }
+const { title, description = 'Explore custom ita bag concepts, collect design inspiration and plan a bag around your favorite pins and photocards.', config: suppliedConfig } = Astro.props;
+const config = suppliedConfig || await getSiteConfig();
+const canonical = new URL(Astro.url.pathname, import.meta.env.PUBLIC_SITE_URL || 'http://localhost:4321');
+const themeStyle = [
+  `--forest:${config.theme.primary}`, `--forest-2:${config.theme.primaryHover}`, `--rose:${config.theme.accent}`,
+  `--mint:${config.theme.surface}`, `--blue:${config.theme.alternate}`, `--paper:${config.theme.page}`,
+  `--ink:${config.theme.text}`, `--muted:${config.theme.muted}`, `--line:${config.theme.line}`,
+  `--content-max:${config.layout.contentMax}px`, `--section-space:${config.layout.sectionSpacing}px`, `--card-columns:${config.layout.cardColumns}`
+].join(';');
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>{title} | {config.brand.name} {config.brand.suffix}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:image" content={new URL(config.seo.ogImage, canonical)} />
+    <meta name="robots" content={config.seo.indexable ? 'index,follow' : 'noindex,follow'} />
+  </head>
+  <body style={themeStyle}>
+    <div class="announcement"><span>Original concept collection</span><span>Plan around pins, photocards and daily use</span><a href="/gallery">Vote in the studio</a></div>
+    <header class="store-header">
+      <nav class="wrap navigation" aria-label="Main navigation">
+        <a href="/" class="wordmark" aria-label={`${config.brand.name} ${config.brand.suffix} home`}>{config.brand.name}<span>{config.brand.suffix}</span></a>
+        <div class="desktop-nav">
+          <details class="nav-menu"><summary>{config.navigation.bags}</summary><div class="mega-menu"><div><b>Shop by bag</b><a href="/collection?shape=Backpack">Backpacks</a><a href="/collection?shape=Crossbody">Crossbody bags</a><a href="/collection?shape=Tote">Tote bags</a></div><div><b>Shop by collection</b><a href="/collection?interest=Pins">For enamel pins</a><a href="/collection?interest=Photocards">For photocards</a><a href="/collection?interest=Conventions">For conventions</a><a href="/collection?interest=Everyday">For everyday</a></div><a class="mega-feature" href="/designs/sweetheart"><img src="/images/heart.webp" alt="The Sweetheart concept"/><span>Featured concept</span><strong>The Sweetheart</strong></a></div></details>
+          <details class="nav-menu"><summary>{config.navigation.create}</summary><div class="mega-menu compact"><div><b>Start a design</b><a href="/customize">Build a design brief</a><a href="/gallery">Save and vote</a></div><div><b>Learn first</b><a href="/guides">Field notes</a><a href="/content/ita-bag-insert-guide">Insert guide</a><a href="/content/ita-bag-materials">Material guide</a></div></div></details>
+          <a href="/gallery">{config.navigation.studio}</a><a href="/guides">{config.navigation.guides}</a>
+        </div>
+        <a class="nav-cta" href="/customize">{config.navigation.cta} <span aria-hidden="true">&rarr;</span></a>
+        <details class="mobile-menu"><summary>Menu</summary><div><a href="/collection">The bags</a><a href="/gallery">Design studio</a><a href="/guides">Field notes</a><a href="/customize">Create your bag</a></div></details>
+      </nav>
+    </header>
+    <main><slot /></main>
+    <footer class="store-footer">
+      <div class="wrap footer-intro"><div><p class="eyebrow">{config.footer.eyebrow}</p><h2>{config.footer.title}</h2></div><a class="button pale" href="/customize">Create a design brief <span aria-hidden="true">&rarr;</span></a></div>
+      <div class="wrap footer-grid"><div><a class="wordmark" href="/">{config.brand.name}<span>{config.brand.suffix}</span></a><p>{config.brand.tagline}</p></div><div><b>Explore</b><a href="/collection">Concept collection</a><a href="/gallery">Design studio</a><a href="/guides">Field notes</a></div><div><b>Plan</b><a href="/customize">Your design brief</a><a href="/gallery?saved=1">Saved designs</a><a href="/content/ita-bag-materials">Materials</a></div><div><b>Workspace</b><a href="/admin">Studio management</a><a href="/admin/site">Site settings</a></div></div>
+      <div class="wrap footer-bottom"><span>&copy; {new Date().getFullYear()} {config.brand.name} {config.brand.suffix}</span><span>Concept collection &middot; Production details to be confirmed</span></div>
+    </footer>
+    <script>
+      const desktopMenus = Array.from(document.querySelectorAll<HTMLDetailsElement>('.nav-menu'));
+      const allMenus = Array.from(document.querySelectorAll<HTMLDetailsElement>('.nav-menu, .mobile-menu'));
+
+      function closeMenu(menu: HTMLDetailsElement) {
+        menu.open = false;
+      }
+
+      desktopMenus.forEach((menu) => {
+        let closeTimer: number | undefined;
+
+        menu.addEventListener('mouseenter', () => {
+          if (closeTimer) window.clearTimeout(closeTimer);
+        });
+
+        menu.addEventListener('mouseleave', () => {
+          closeTimer = window.setTimeout(() => closeMenu(menu), 160);
+        });
+
+        menu.addEventListener('focusout', (event) => {
+          if (!menu.contains(event.relatedTarget as Node | null)) closeMenu(menu);
+        });
+
+        menu.addEventListener('toggle', () => {
+          if (menu.open) desktopMenus.forEach((other) => { if (other !== menu) closeMenu(other); });
+        });
+      });
+
+      document.addEventListener('pointerdown', (event) => {
+        allMenus.forEach((menu) => {
+          if (!menu.contains(event.target as Node)) closeMenu(menu);
+        });
+      });
+
+      document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') {
+          allMenus.forEach(closeMenu);
+          (document.activeElement as HTMLElement | null)?.blur();
+        }
+      });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,46 @@
+---
+import StoreLayout from '@/components/StoreLayout.astro';
+import { getPublishedContents } from '@/lib/data';
+
+export const prerender = true;
+
+export async function getStaticPaths() {
+  const pages = await getPublishedContents();
+  return pages.map((page) => ({
+    params: { slug: page.slug },
+    props: { page }
+  }));
+}
+
+const { page } = Astro.props;
+---
+
+<StoreLayout title={page.title} description={page.metaDescription}>
+  <article class="article">
+    <a class="small" href="/guides">Field notes / {page.primaryKeyword}</a>
+    <h1 style="margin-top: 16px;">{page.title}</h1>
+    <p class="lede">{page.heroSummary}</p>
+    <a href="/collection"><img src="/images/campaign.webp" alt="Pink and mint ita bag display concepts" width="1536" height="1024" /></a>
+    <p class="small">AI concept imagery</p>
+
+    {page.body.map((section) => (
+      <section class="band">
+        <h2>{section.heading}</h2>
+        {section.paragraphs.map((paragraph) => <p>{paragraph}</p>)}
+        {section.bullets && (
+          <ul>
+            {section.bullets.map((bullet) => <li>{bullet}</li>)}
+          </ul>
+        )}
+      </section>
+    ))}
+
+    <section class="band">
+      <h2>Related Pages</h2>
+      <div class="actions">
+        {page.internalLinks.map((link) => <a class="button" href={`/content/${link.slug}`}>{link.label}</a>)}
+      </div>
+    </section>
+    <div class="actions"><a class="button" href="/customize">Plan your own bag 鈫?/a><a class="button light" href="/gallery">Explore design ideas 鈫?/a></div>
+  </article>
+</StoreLayout>
