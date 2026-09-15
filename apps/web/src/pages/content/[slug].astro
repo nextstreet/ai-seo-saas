@@ -41,6 +41,9 @@ const { page } = Astro.props;
         {page.internalLinks.map((link) => <a class="button" href={`/content/${link.slug}`}>{link.label}</a>)}
       </div>
     </section>
-    <div class="actions"><a class="button" href="/customize">Plan your own bag 鈫?/a><a class="button light" href="/gallery">Explore design ideas 鈫?/a></div>
+    <div class="actions">
+      <a class="button" href="/customize">Plan your own bag</a>
+      <a class="button light" href="/gallery">Explore design ideas</a>
+    </div>
   </article>
 </StoreLayout>
