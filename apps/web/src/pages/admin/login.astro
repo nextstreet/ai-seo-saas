@@ -1,0 +1,40 @@
+---
+import BaseLayout from '@/components/BaseLayout.astro';
+---
+<BaseLayout title="Admin login | Ita SEO OS" description="Secure access to storefront, content and route management.">
+  <main class="login-shell">
+    <form id="login-form" class="login-panel">
+      <p class="kicker">Ita SEO OS</p>
+      <h1>Sign in to the workspace</h1>
+      <p>Manage storefront content, concepts, modules and publishing rules.</p>
+      <label>Account<input id="username" name="username" autocomplete="username" required autofocus /></label>
+      <label>Password<input id="password" name="password" type="password" autocomplete="current-password" required /></label>
+      <button type="submit">Sign in</button>
+      <p id="login-status" role="status"></p>
+    </form>
+  </main>
+  <script>
+    const form = document.querySelector<HTMLFormElement>('#login-form');
+    const status = document.querySelector<HTMLElement>('#login-status');
+    form?.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      if (!status) return;
+      status.textContent = 'Signing in...';
+      const data = new FormData(form);
+      const response = await fetch('/api/admin/login', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(Object.fromEntries(data)) });
+      const result = await response.json();
+      if (!response.ok) { status.textContent = result.error || 'Sign in failed.'; return; }
+      const next = new URLSearchParams(location.search).get('next');
+      location.href = next?.startsWith('/admin') ? next : '/admin';
+    });
+  </script>
+</BaseLayout>
+<style>
+  .login-shell { min-height: calc(100vh - 160px); display: grid; place-items: center; padding: 48px 16px; }
+  .login-panel { width: min(430px, 100%); background: white; border: 1px solid #d9d5cc; padding: 34px; box-shadow: 0 18px 50px #1b2d2714; }
+  .login-panel h1 { margin: 5px 0 8px; font-size: 2rem; }
+  .login-panel label { display: grid; gap: 7px; margin-top: 18px; font-size: .82rem; font-weight: 700; }
+  .login-panel input { min-height: 44px; border: 1px solid #cbd2ce; padding: 9px 11px; font: inherit; }
+  .login-panel button { width: 100%; min-height: 44px; margin-top: 24px; border: 0; background: #153f34; color: white; font-weight: 800; cursor: pointer; }
+  #login-status { min-height: 24px; color: #be3455; font-size: .85rem; }
+</style>

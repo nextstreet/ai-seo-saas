@@ -1,9 +1,12 @@
 ---
 import StoreLayout from '@/components/StoreLayout.astro';
-import { collection } from '@/lib/collection';
+import { getSiteConfig } from '@/lib/site-config';
+const config = await getSiteConfig();
+const collection = config.catalog;
+const intro = config.pages.customize;
 ---
-<StoreLayout title="Create Your Ita Bag Brief" description="Build and download an ita bag design brief based on your collection, occasion and visual direction.">
-  <div class="wrap page-head"><p class="eyebrow">Custom planning studio</p><h1>Turn a favorite collection into a clear brief.</h1><p>Choose what you carry and how you use it. The preview translates those choices into practical points to discuss with a maker.</p></div>
+<StoreLayout title={intro.title} description={intro.description} config={config}>
+  <div class="wrap page-head"><p class="eyebrow">{intro.eyebrow}</p><h1>{intro.title}</h1><p>{intro.description}</p></div>
   <section class="wrap section" style="padding-top:0">
     <div class="builder-progress"><span>01 / Collection</span><span>02 / Direction</span><span>03 / Brief</span></div>
     <div class="builder-shell">
@@ -17,8 +20,10 @@ import { collection } from '@/lib/collection';
     </div>
   </section>
 </StoreLayout>
+<script id="configured-catalog" type="application/json" is:inline set:html={JSON.stringify(collection)}></script>
 <script>
-  import { collection } from '@/lib/collection';
+  import type { CollectionItem } from '@/lib/collection';
+  const collection = JSON.parse(document.querySelector('#configured-catalog')?.textContent || '[]') as CollectionItem[];
   const form = document.querySelector<HTMLFormElement>('#brief')!;
   const status = document.querySelector('#status')!;
   const fields = ['design','display','quantity','largestItem','occasion','shape','window','color','priority','insert','notes'];

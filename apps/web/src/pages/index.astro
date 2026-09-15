@@ -1,11 +1,14 @@
 ---
 import StoreLayout from '@/components/StoreLayout.astro';
 import ConceptCard from '@/components/ConceptCard.astro';
-import { browsePaths, collection } from '@/lib/collection';
+import { browsePaths } from '@/lib/collection';
 import { getPublishedContents } from '@/lib/data';
 import { getSiteConfig } from '@/lib/site-config';
 const guides = (await getPublishedContents()).slice(0, 3);
 const config = await getSiteConfig();
+const collection = config.catalog;
+const copy = config.home.sections;
+const routes = config.routes;
 const sectionOrder = Object.fromEntries(config.home.sectionOrder.map((key, index) => [key, index + 1]));
 ---
 <StoreLayout title="Custom Ita Bags" description="Explore original custom ita bag concepts for pins, photocards, conventions and everyday collections." config={config}>
@@ -25,28 +28,28 @@ const sectionOrder = Object.fromEntries(config.home.sectionOrder.map((key, index
   <div class="home-sections">
 
   <section class="section wrap" hidden={!config.home.visible.browse} style={`order:${sectionOrder.browse}`}>
-    <div class="section-head"><div><p class="eyebrow">Start with what you collect</p><h2>Find a direction that fits.</h2></div><p>Browse by display object and occasion, then refine the bag shape around how the collection will be carried.</p></div>
-    <div class="browse-grid">{browsePaths.map((path) => <a class="browse-card" href={`/collection?interest=${path.value}`}><img src={path.image} alt="" loading="lazy" /><div><h3>{path.label}</h3><p>{path.description}</p></div></a>)}</div>
+    <div class="section-head"><div><p class="eyebrow">{copy.browse.eyebrow}</p><h2>{copy.browse.title}</h2></div><p>{copy.browse.description}</p></div>
+    <div class="browse-grid">{browsePaths.map((path) => <a class="browse-card" href={`${routes.collection}?interest=${path.value}`}><img src={path.image} alt="" loading="lazy" /><div><h3>{path.label}</h3><p>{path.description}</p></div></a>)}</div>
   </section>
 
   <section class="section green-band" hidden={!config.home.visible.collection} style={`order:${sectionOrder.collection}`}>
-    <div class="wrap"><div class="section-head"><div><p class="eyebrow">Concept collection / 01</p><h2>Three ways to make it yours.</h2></div><a class="text-link" href="/collection">View all concepts <span aria-hidden="true">&rarr;</span></a></div><div class="three">{collection.map((item, index) => <ConceptCard item={item} priority={index === 0} />)}</div></div>
+    <div class="wrap"><div class="section-head"><div><p class="eyebrow">{copy.collection.eyebrow}</p><h2>{copy.collection.title}</h2></div><a class="text-link" href={routes.collection}>{copy.collection.ctaLabel} <span aria-hidden="true">&rarr;</span></a></div><div class="three">{collection.map((item, index) => <ConceptCard item={item} priority={index === 0} />)}</div></div>
   </section>
 
   <section class="section wrap" hidden={!config.home.visible.process} style={`order:${sectionOrder.process}`}>
-    <div class="section-head"><div><p class="eyebrow">From idea to clear direction</p><h2>A simpler custom journey.</h2></div><p>Each step turns taste into useful design information, without asking you to understand production terminology first.</p></div>
+    <div class="section-head"><div><p class="eyebrow">{copy.process.eyebrow}</p><h2>{copy.process.title}</h2></div><p>{copy.process.description}</p></div>
     <div class="process-grid"><article class="process-step"><span>01 / Discover</span><h3>Choose a mood</h3><p>Begin with a bag, color or display style that feels close to your collection.</p></article><article class="process-step"><span>02 / Match</span><h3>Add your collection</h3><p>Tell us what you display, how many pieces you carry and where the bag will go.</p></article><article class="process-step"><span>03 / Refine</span><h3>Review the choices</h3><p>See the planning points that affect window, insert, strap and carry format.</p></article><article class="process-step"><span>04 / Brief</span><h3>Keep a usable brief</h3><p>Save or download the result to continue with a maker when you are ready.</p></article></div>
   </section>
 
   <section class="section blue-band" hidden={!config.home.visible.decision} style={`order:${sectionOrder.decision}`}>
-    <div class="wrap editorial"><img src="/images/mint.webp" alt="Mint green photocard ita bag concept" loading="lazy" /><div class="editorial-copy"><p class="eyebrow">Collection-first design</p><h2>See the effect. Understand the choices.</h2><p>A visual concept creates the desire. Clear planning notes explain how display size, protection and daily use affect the final bag.</p><ul class="decision-list"><li><strong>Display</strong><span>Pins, cards or plush pieces</span></li><li><strong>Carry</strong><span>Everyday, event or gift</span></li><li><strong>Structure</strong><span>Window, insert and bag shape</span></li></ul><a class="button" href="/customize">Match a bag to your collection <span aria-hidden="true">&rarr;</span></a></div></div>
+    <div class="wrap editorial"><img src="/images/mint.webp" alt="Mint green photocard ita bag concept" loading="lazy" /><div class="editorial-copy"><p class="eyebrow">{copy.decision.eyebrow}</p><h2>{copy.decision.title}</h2><p>{copy.decision.description}</p><ul class="decision-list"><li><strong>Display</strong><span>Pins, cards or plush pieces</span></li><li><strong>Carry</strong><span>Everyday, event or gift</span></li><li><strong>Structure</strong><span>Window, insert and bag shape</span></li></ul><a class="button" href={routes.customize}>{copy.decision.ctaLabel} <span aria-hidden="true">&rarr;</span></a></div></div>
   </section>
 
   <section class="section wrap" hidden={!config.home.visible.community} style={`order:${sectionOrder.community}`}>
-    <div class="section-head"><div><p class="eyebrow">Designed in the open</p><h2>Your vote shapes what comes next.</h2></div><a class="text-link" href="/gallery">Enter the design studio <span aria-hidden="true">&rarr;</span></a></div>
+    <div class="section-head"><div><p class="eyebrow">{copy.community.eyebrow}</p><h2>{copy.community.title}</h2></div><a class="text-link" href={routes.gallery}>{copy.community.ctaLabel} <span aria-hidden="true">&rarr;</span></a></div>
     <div class="signal-grid"><article class="signal"><strong>Save a direction</strong><p>Keep a private shortlist on this device and return to it when you build a brief.</p></article><article class="signal"><strong>Vote on concepts</strong><p>Signal which color, shape and display ideas deserve further development.</p></article><article class="signal"><strong>Create from a favorite</strong><p>Carry a selected concept directly into the custom planning flow.</p></article></div>
   </section>
 
-  <section class="section green-band" hidden={!config.home.visible.guides} style={`order:${sectionOrder.guides}`}><div class="wrap"><div class="section-head"><div><p class="eyebrow">Field notes</p><h2>Make the design work in real life.</h2></div><a class="text-link" href="/guides">Browse all guides <span aria-hidden="true">&rarr;</span></a></div><div class="three">{guides.map((guide) => <a class="guide-link" href={`/content/${guide.slug}`}><p class="eyebrow">{guide.pageType.replaceAll('_', ' ')}</p><h3>{guide.title}</h3><p>{guide.metaDescription}</p></a>)}</div></div></section>
+  <section class="section green-band" hidden={!config.home.visible.guides} style={`order:${sectionOrder.guides}`}><div class="wrap"><div class="section-head"><div><p class="eyebrow">{copy.guides.eyebrow}</p><h2>{copy.guides.title}</h2></div><a class="text-link" href={routes.guides}>{copy.guides.ctaLabel} <span aria-hidden="true">&rarr;</span></a></div><div class="three">{guides.map((guide) => <a class="guide-link" href={`/content/${guide.slug}`}><p class="eyebrow">{guide.pageType.replaceAll('_', ' ')}</p><h3>{guide.title}</h3><p>{guide.metaDescription}</p></a>)}</div></div></section>
   </div>
 </StoreLayout>

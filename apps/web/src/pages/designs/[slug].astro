@@ -1,19 +1,19 @@
 ---
 import StoreLayout from '@/components/StoreLayout.astro';
 import ConceptCard from '@/components/ConceptCard.astro';
-import { collection } from '@/lib/collection';
+import { getSiteConfig } from '@/lib/site-config';
 export const prerender = true;
-export function getStaticPaths() { return collection.map((item) => ({ params: { slug: item.slug }, props: { item } })); }
-const { item } = Astro.props;
+export async function getStaticPaths() { const config = await getSiteConfig(); return config.catalog.map((item) => ({ params: { slug: item.slug }, props: { item, collection: config.catalog, config } })); }
+const { item, collection, config } = Astro.props;
 const related = collection.filter((candidate) => candidate.slug !== item.slug).slice(0, 2);
 ---
-<StoreLayout title={`${item.name} Ita Bag Concept`} description={item.description}>
+<StoreLayout title={`${item.name} Ita Bag Concept`} description={item.description} config={config}>
   <section class="wrap product-detail">
     <div class="product-gallery"><div class="thumbs"><button class="thumb active" data-position="center" aria-label="Show full bag"><img src={item.image} alt="" /></button><button class="thumb" data-position="top" aria-label="Show top detail"><img src={item.image} alt="" /></button><button class="thumb" data-position="bottom" aria-label="Show display detail"><img src={item.image} alt="" /></button></div><img id="main-product" class="main-product-image" src={item.image} alt={`${item.name} concept, ${item.color} ${item.type}`} width="1024" height="1024" /></div>
-    <div class="product-summary"><a class="small" href="/collection">Concept collection / {item.type}</a><h1>{item.name}</h1><p>{item.description}</p><div class="concept-notice"><strong>Design concept</strong><br />The image defines the visual direction. Final construction and specifications require maker confirmation.</div>
+    <div class="product-summary"><a class="small" href={config.routes.collection}>Concept collection / {item.type}</a><h1>{item.name}</h1><p>{item.description}</p><div class="concept-notice"><strong>Design concept</strong><br />The image defines the visual direction. Final construction and specifications require maker confirmation.</div>
       <div class="choice-group"><span>Color direction</span><div class="choice-row"><button class="choice-chip active" type="button"><i class="swatch" style={`background:${item.swatch}`}></i> {item.color}</button><button class="choice-chip" type="button">Adapt this palette</button></div></div>
       <div class="choice-group"><span>Concept profile</span><div class="choice-row"><span class="choice-chip">{item.display}</span><span class="choice-chip">{item.window} window</span><span class="choice-chip">{item.collectionSize} collection</span><span class="choice-chip">{item.occasion}</span></div></div>
-      <div class="product-actions"><a class="button" href={`/customize?design=${item.slug}`}>Use as my starting point <span aria-hidden="true">&rarr;</span></a><button class="save-button" type="button" data-save={item.slug} aria-label="Save this concept" aria-pressed="false">Save</button></div><p class="status" id="save-status" role="status"></p>
+      <div class="product-actions"><a class="button" href={`${config.routes.customize}?design=${item.slug}`}>Use as my starting point <span aria-hidden="true">&rarr;</span></a><button class="save-button" type="button" data-save={item.slug} aria-label="Save this concept" aria-pressed="false">Save</button></div><p class="status" id="save-status" role="status"></p>
     </div>
   </section>
 

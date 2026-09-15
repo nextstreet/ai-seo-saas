@@ -1,10 +1,13 @@
 ---
 import StoreLayout from '@/components/StoreLayout.astro';
 import ConceptCard from '@/components/ConceptCard.astro';
-import { collection } from '@/lib/collection';
+import { getSiteConfig } from '@/lib/site-config';
+const config = await getSiteConfig();
+const collection = config.catalog;
+const intro = config.pages.collection;
 ---
-<StoreLayout title="Explore Ita Bag Concepts" description="Filter original ita bag concepts by display collection, bag shape and visual mood.">
-  <div class="wrap page-head"><p class="eyebrow">The concept collection</p><h1>Find your kind of carry.</h1><div class="collection-intro"><p>Start with the things you collect, the way you plan to carry them or simply a color direction you love.</p><aside>Concept images show design direction. Materials, dimensions, pricing and production feasibility remain open until a maker confirms them.</aside></div></div>
+<StoreLayout title={intro.title} description={intro.description} config={config}>
+  <div class="wrap page-head"><p class="eyebrow">{intro.eyebrow}</p><h1>{intro.title}</h1><div class="collection-intro"><p>{intro.description}</p><aside>Concept images show design direction. Materials, dimensions, pricing and production feasibility remain open until a maker confirms them.</aside></div></div>
   <section class="wrap section" style="padding-top:0">
     <div class="filters">
       <label>Collection<select id="interest"><option value="">All collections</option><option>Pins</option><option>Photocards</option><option>Conventions</option><option>Everyday</option></select></label>
@@ -15,7 +18,7 @@ import { collection } from '@/lib/collection';
     <div class="three">{collection.map((item, index) => <ConceptCard item={item} priority={index < 3} />)}</div>
     <div class="empty" id="empty" hidden><h2>No concept matches all three choices.</h2><p>Clear one filter to open the collection again.</p></div>
   </section>
-  <section class="section green-band"><div class="wrap planning-layout"><div><p class="eyebrow">Need a more specific direction?</p><h2>Start with the collection itself.</h2></div><div><p>Use the design brief to describe quantity, display type, color and occasion. The result gives you a clearer starting point than choosing a bag shape alone.</p><a class="button" href="/customize">Build your design brief <span aria-hidden="true">&rarr;</span></a></div></div></section>
+  <section class="section green-band"><div class="wrap planning-layout"><div><p class="eyebrow">Need a more specific direction?</p><h2>Start with the collection itself.</h2></div><div><p>Use the design brief to describe quantity, display type, color and occasion. The result gives you a clearer starting point than choosing a bag shape alone.</p><a class="button" href={config.routes.customize}>Build your design brief <span aria-hidden="true">&rarr;</span></a></div></div></section>
 </StoreLayout>
 <script>
   const interest = document.querySelector<HTMLSelectElement>('#interest')!;

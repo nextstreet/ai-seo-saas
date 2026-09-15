@@ -1,6 +1,6 @@
 ---
 import BaseLayout from '@/components/BaseLayout.astro';
-import { getSiteConfig, homeSectionKeys } from '@/lib/site-config';
+import { getSiteConfig, homeSectionKeys, routeKeys } from '@/lib/site-config';
 const config = await getSiteConfig();
 const sectionLabels = { browse: 'Browse paths', collection: 'Concept collection', process: 'Custom process', decision: 'Decision guide', community: 'Community signals', guides: 'Field notes' };
 ---
@@ -15,6 +15,11 @@ const sectionLabels = { browse: 'Browse paths', collection: 'Concept collection'
       <label>Brand name<input name="brand.name" value={config.brand.name} required /></label><label>Brand suffix<input name="brand.suffix" value={config.brand.suffix} required /></label>
       <label class="wide">Brand description<textarea name="brand.tagline" rows="2">{config.brand.tagline}</textarea></label>
       {Object.entries(config.navigation).map(([key, value]) => <label>{key.replace(/([A-Z])/g, ' $1')}<input name={`navigation.${key}`} value={value} required /></label>)}
+      {Object.entries(config.announcement).map(([key, value]) => <label>Announcement {key}<input name={`announcement.${key}`} value={value} required /></label>)}
+    </div></section>
+
+    <section class="card setting-block"><div><p class="kicker">Routing</p><h2>Public paths</h2><p class="meta">Use lowercase paths such as /bags or /design-studio. Admin, API, content and design paths are reserved.</p></div><div class="form-grid">
+      {routeKeys.map((key) => <label>{key} path<input name={`routes.${key}`} value={config.routes[key]} pattern="/[a-z0-9/-]+" required /></label>)}
     </div></section>
 
     <section class="card setting-block"><div><p class="kicker">First viewport</p><h2>Homepage hero</h2></div><div class="form-grid">
@@ -37,9 +42,14 @@ const sectionLabels = { browse: 'Browse paths', collection: 'Concept collection'
 
     <section class="card setting-block"><div><p class="kicker">Composition</p><h2>Homepage sections</h2></div><div class="section-list">
       {config.home.sectionOrder.map((key, index) => <div class="section-row"><strong>{sectionLabels[key]}</strong><label class="switch"><input type="checkbox" name={`visible.${key}`} checked={config.home.visible[key]} /> Visible</label><label>Position<select name={`order.${key}`}>{homeSectionKeys.map((_, optionIndex) => <option value={optionIndex + 1} selected={optionIndex === index}>{optionIndex + 1}</option>)}</select></label></div>)}
+      <div class="module-copy">{homeSectionKeys.map((key) => <fieldset><legend>{sectionLabels[key]}</legend><label>Eyebrow<input name={`sections.${key}.eyebrow`} value={config.home.sections[key].eyebrow} /></label><label>Heading<input name={`sections.${key}.title`} value={config.home.sections[key].title} /></label><label>Description<textarea name={`sections.${key}.description`} rows="2">{config.home.sections[key].description}</textarea></label><label>Link label<input name={`sections.${key}.ctaLabel`} value={config.home.sections[key].ctaLabel} /></label></fieldset>)}</div>
     </div></section>
 
-    <section class="save-bar"><label>Admin token<input type="password" id="admin-token" autocomplete="current-password" placeholder="Required to publish" /></label><button type="submit">Publish settings</button><span id="save-status" role="status"></span></section>
+    <section class="card setting-block"><div><p class="kicker">Page headers</p><h2>Primary page content</h2></div><div class="module-copy">{routeKeys.map((key) => <fieldset><legend>{key}</legend><label>Eyebrow<input name={`pages.${key}.eyebrow`} value={config.pages[key].eyebrow} /></label><label>Page title<input name={`pages.${key}.title`} value={config.pages[key].title} /></label><label>Description<textarea name={`pages.${key}.description`} rows="3">{config.pages[key].description}</textarea></label></fieldset>)}</div></section>
+
+    <section class="card setting-block" id="catalog"><div><p class="kicker">Concepts</p><h2>Core projects</h2><p class="meta">These entries feed homepage cards, collection filters, the gallery, design pages and the brief builder.</p></div><div class="catalog-grid">{config.catalog.map((item, index) => <fieldset><legend>{item.name}</legend><div class="form-grid"><label>Name<input name={`catalog.${index}.name`} value={item.name} /></label><label>Slug<input name={`catalog.${index}.slug`} value={item.slug} /></label><label>Type<select name={`catalog.${index}.type`}>{['Backpack','Crossbody','Tote'].map((value) => <option selected={item.type === value}>{value}</option>)}</select></label><label>Display<select name={`catalog.${index}.display`}>{['Pins','Photocards'].map((value) => <option selected={item.display === value}>{value}</option>)}</select></label><label>Color<input name={`catalog.${index}.color`} value={item.color} /></label><label>Swatch<input type="color" name={`catalog.${index}.swatch`} value={item.swatch} /></label><label class="wide">Image path<input name={`catalog.${index}.image`} value={item.image} /></label><label>Mood<select name={`catalog.${index}.mood`}>{['Playful','Soft','Minimal'].map((value) => <option selected={item.mood === value}>{value}</option>)}</select></label><label>Occasion<select name={`catalog.${index}.occasion`}>{['Conventions','Everyday'].map((value) => <option selected={item.occasion === value}>{value}</option>)}</select></label><label>Window<select name={`catalog.${index}.window`}>{['Heart','Rectangle'].map((value) => <option selected={item.window === value}>{value}</option>)}</select></label><label>Collection size<select name={`catalog.${index}.collectionSize`}>{['Small','Medium','Large'].map((value) => <option selected={item.collectionSize === value}>{value}</option>)}</select></label><label class="wide">Description<textarea name={`catalog.${index}.description`} rows="3">{item.description}</textarea></label><label class="wide">Planning note<textarea name={`catalog.${index}.note`} rows="3">{item.note}</textarea></label></div></fieldset>)}</div></section>
+
+    <section class="save-bar"><a href="/" target="_blank">Preview storefront</a><button type="submit">Publish settings</button><span id="save-status" role="status"></span></section>
   </form>
 
   <script>
@@ -51,12 +61,15 @@ const sectionLabels = { browse: 'Browse paths', collection: 'Concept collection'
       status.textContent = 'Publishing...';
       const data = new FormData(form);
       const readGroup = (prefix: string) => Object.fromEntries([...data.entries()].filter(([key]) => key.startsWith(`${prefix}.`)).map(([key, value]) => [key.slice(prefix.length + 1), value]));
+      const readGroups = (prefix: string, keys: readonly string[]) => Object.fromEntries(keys.map((key) => [key, readGroup(`${prefix}.${key}`)]));
       const order = Object.entries(readGroup('order')).sort((a, b) => Number(a[1]) - Number(b[1])).map(([key]) => key);
       const visible = Object.fromEntries(['browse', 'collection', 'process', 'decision', 'community', 'guides'].map((key) => [key, data.has(`visible.${key}`)]));
-      const payload = { brand: readGroup('brand'), navigation: readGroup('navigation'), hero: readGroup('hero'), theme: readGroup('theme'), footer: readGroup('footer'), seo: { ...readGroup('seo'), indexable: data.has('seo.indexable') }, benefits: String(data.get('benefits') || '').split('\n').map((item) => item.trim()).filter(Boolean), layout: readGroup('layout'), home: { sectionOrder: order, visible } };
-      const token = (document.querySelector<HTMLInputElement>('#admin-token')?.value || '');
+      const sectionKeys = ['browse', 'collection', 'process', 'decision', 'community', 'guides'];
+      const pageKeys = ['collection', 'gallery', 'customize', 'guides'];
+      const catalog = [0, 1, 2].map((index) => readGroup(`catalog.${index}`));
+      const payload = { brand: readGroup('brand'), navigation: readGroup('navigation'), announcement: readGroup('announcement'), routes: readGroup('routes'), pages: readGroups('pages', pageKeys), catalog, hero: readGroup('hero'), theme: readGroup('theme'), footer: readGroup('footer'), seo: { ...readGroup('seo'), indexable: data.has('seo.indexable') }, benefits: String(data.get('benefits') || '').split('\n').map((item) => item.trim()).filter(Boolean), layout: readGroup('layout'), home: { sectionOrder: order, visible, sections: readGroups('sections', sectionKeys) } };
       try {
-        const response = await fetch('/api/admin/site-settings', { method: 'POST', headers: { 'content-type': 'application/json', authorization: `Bearer ${token}` }, body: JSON.stringify(payload) });
+        const response = await fetch('/api/admin/site-settings', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(payload) });
         const result = await response.json();
         status.textContent = response.ok ? 'Published. Refresh the storefront to review it.' : result.error || 'Publishing failed.';
       } catch { status.textContent = 'The server could not be reached.'; }
@@ -83,9 +96,14 @@ const sectionLabels = { browse: 'Browse paths', collection: 'Concept collection'
   .section-row { display: grid; grid-template-columns: 1fr 100px 110px; gap: 20px; align-items: center; padding: 12px 0; border-bottom: 1px solid #e1e5e2; }
   .section-row label { display: flex; align-items: center; gap: 7px; }
   .section-row input[type="checkbox"] { width: 16px; }
-  .save-bar { position: sticky; bottom: 16px; z-index: 4; display: grid; grid-template-columns: minmax(220px,320px) auto 1fr; gap: 16px; align-items: end; background: #163f34; color: white; padding: 18px 22px; box-shadow: 0 12px 32px #0003; }
+  .module-copy, .catalog-grid { display: grid; gap: 14px; margin-top: 22px; }
+  fieldset { margin: 0; border: 1px solid #d7ddd9; padding: 18px; }
+  legend { padding: 0 7px; font-weight: 800; }
+  .module-copy fieldset { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .module-copy fieldset label:nth-of-type(3) { grid-column: 1 / -1; }
+  .save-bar { position: sticky; bottom: 16px; z-index: 4; display: grid; grid-template-columns: minmax(180px,1fr) auto 1fr; gap: 16px; align-items: center; background: #163f34; color: white; padding: 18px 22px; box-shadow: 0 12px 32px #0003; }
   .save-bar label { color: white; }
   .save-bar button { min-height: 40px; border: 0; background: #fff; color: #163f34; padding: 0 18px; font-weight: 800; cursor: pointer; }
   #save-status { align-self: center; font-size: .85rem; }
-  @media(max-width:760px){.setting-block{grid-template-columns:1fr}.form-grid,.color-grid,.compact-grid{grid-template-columns:1fr}.section-row{grid-template-columns:1fr 90px 90px}.save-bar{grid-template-columns:1fr;position:static}}
+  @media(max-width:760px){.setting-block{grid-template-columns:1fr}.form-grid,.color-grid,.compact-grid,.module-copy fieldset{grid-template-columns:1fr}.module-copy fieldset label:nth-of-type(3){grid-column:auto}.section-row{grid-template-columns:1fr 90px 90px}.save-bar{grid-template-columns:1fr;position:static}}
 </style>

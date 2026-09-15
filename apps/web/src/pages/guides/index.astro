@@ -1,13 +1,16 @@
 ---
 import StoreLayout from '@/components/StoreLayout.astro';
 import { getPublishedContents } from '@/lib/data';
+import { getSiteConfig } from '@/lib/site-config';
 const pages = await getPublishedContents();
+const config = await getSiteConfig();
+const intro = config.pages.guides;
 const featured = pages.find((page) => page.slug === 'ita-bag-insert-guide') || pages[0];
 const topicName = (type: string) => type === 'product' ? 'Bags' : type === 'design_inspiration' ? 'Design' : type === 'material_guide' ? 'Materials' : type === 'comparison' ? 'Compare' : 'Use';
 const topics = ['All','Bags','Design','Materials','Use','Compare'];
 ---
-<StoreLayout title="Ita Bag Field Notes" description="Practical ita bag guides organized around bag types, display design, materials, use cases and comparisons.">
-  <div class="wrap page-head"><p class="eyebrow">Field notes</p><h1>Ideas are better with useful details.</h1><p>Explore bag types, display arrangements and practical questions before turning a visual direction into a brief.</p></div>
+<StoreLayout title={intro.title} description={intro.description} config={config}>
+  <div class="wrap page-head"><p class="eyebrow">{intro.eyebrow}</p><h1>{intro.title}</h1><p>{intro.description}</p></div>
   <section class="wrap section" style="padding-top:0">
     <div class="topic-strip" role="tablist" aria-label="Filter guides by topic">{topics.map((topic, index) => <button type="button" role="tab" aria-selected={index === 0 ? 'true' : 'false'} class={index === 0 ? 'active' : ''} data-topic={topic}>{topic}</button>)}</div>
     <a class="guide-feature" href={`/content/${featured.slug}`}><img src="/images/campaign.webp" alt="Pink and mint ita bag concept collection" /><div><p class="eyebrow">Featured field note</p><h2>{featured.title}</h2><p>{featured.metaDescription}</p><span class="text-link">Read the guide <span aria-hidden="true">&rarr;</span></span></div></a>

@@ -7,6 +7,7 @@ interface Props {
 const { title, description } = Astro.props;
 const siteUrl = import.meta.env.PUBLIC_SITE_URL || 'http://localhost:4321';
 const canonical = new URL(Astro.url.pathname, siteUrl).toString();
+const adminArea = Astro.url.pathname.startsWith('/admin') && Astro.url.pathname !== '/admin/login';
 ---
 
 <!doctype html>
@@ -90,12 +91,16 @@ const canonical = new URL(Astro.url.pathname, siteUrl).toString();
       }
 
       .navlinks a,
+      .navlinks button,
       .button {
         border: 1px solid transparent;
         padding: 8px 11px;
         border-radius: 7px;
         font-size: 14px;
         color: var(--muted);
+        background: transparent;
+        font: inherit;
+        cursor: pointer;
       }
 
       .navlinks a:hover,
@@ -334,11 +339,9 @@ const canonical = new URL(Astro.url.pathname, siteUrl).toString();
   <body>
     <header class="topbar">
       <nav class="shell nav" aria-label="Primary">
-        <a class="brand" href="/">Ita SEO OS</a>
+        <a class="brand" href={adminArea ? '/admin' : '/'}>Ita SEO OS</a>
         <div class="navlinks">
-          <a href="/admin">CMS</a>
-          <a href="/gallery">Gallery</a>
-          <a href="/api/admin/candidates">API</a>
+          {adminArea ? <><a href="/admin">Content</a><a href="/admin/site">Storefront</a><a href="/admin/site#catalog">Projects</a><a href="/" target="_blank">View site</a><button id="admin-logout" type="button">Log out</button></> : <><a href="/admin">CMS</a><a href="/gallery">Gallery</a></>}
         </div>
       </nav>
     </header>
@@ -348,5 +351,11 @@ const canonical = new URL(Astro.url.pathname, siteUrl).toString();
     <footer>
       <div class="shell">Multi-tenant SEO core for intent-led pages, community feedback, and future SaaS expansion.</div>
     </footer>
+    {adminArea && <script>
+      document.querySelector('#admin-logout')?.addEventListener('click', async () => {
+        await fetch('/api/admin/logout', { method: 'POST' });
+        location.href = '/admin/login';
+      });
+    </script>}
   </body>
 </html>
