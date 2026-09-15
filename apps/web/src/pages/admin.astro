@@ -1,10 +1,8 @@
 ---
 import BaseLayout from '@/components/BaseLayout.astro';
-import { getCandidates, getSystemSnapshot } from '@/lib/data';
+import { getSystemSnapshot } from '@/lib/data';
 
-const candidates = await getCandidates();
 const snapshot = getSystemSnapshot();
-const sorted = [...candidates].sort((a, b) => b.opportunityScore + b.qualityScore - (a.opportunityScore + a.qualityScore));
 ---
 
 <BaseLayout title="CMS Console | Ita SEO OS" description="Manage candidate content, quality gates, topic graph, and publish readiness for the Custom Ita Bag SEO system.">
@@ -33,7 +31,15 @@ const sorted = [...candidates].sort((a, b) => b.opportunityScore + b.qualityScor
     </aside>
 
     <div>
-      <h2>Candidate Content</h2>
+      <div class="console-head">
+        <div><h2>Candidate Content</h2><p class="meta">Authenticate to load this tenant's live candidate queue.</p></div>
+        <form id="candidate-access" class="access-form">
+          <label for="admin-token">Admin token</label>
+          <input type="password" id="admin-token" autocomplete="current-password" required />
+          <button type="submit">Load candidates</button>
+        </form>
+      </div>
+      <p id="candidate-status" class="meta" role="status">Candidate data is locked.</p>
       <table>
         <thead>
           <tr>
@@ -43,27 +49,72 @@ const sorted = [...candidates].sort((a, b) => b.opportunityScore + b.qualityScor
             <th>Gate</th>
           </tr>
         </thead>
-        <tbody>
-          {sorted.map((candidate) => (
-            <tr>
-              <td>
-                <strong>{candidate.title}</strong>
-                <div class="meta">{candidate.primaryKeyword}</div>
-                <div class="meta">/{candidate.slug}</div>
-              </td>
-              <td>{candidate.pageType.replaceAll('_', ' ')}</td>
-              <td>
-                <div><span class="score">{candidate.opportunityScore}</span> opportunity</div>
-                <div><span class="score">{candidate.qualityScore}</span> quality</div>
-              </td>
-              <td>
-                <span class="pill">{candidate.status}</span>
-                <p class="meta" style="margin-top: 8px;">{candidate.qualityGate.notes[0]}</p>
-              </td>
-            </tr>
-          ))}
-        </tbody>
+        <tbody id="candidate-rows"></tbody>
       </table>
     </div>
   </section>
 </BaseLayout>
+
+<script>
+  const form = document.querySelector<HTMLFormElement>('#candidate-access');
+  const rows = document.querySelector<HTMLTableSectionElement>('#candidate-rows');
+  const status = document.querySelector<HTMLElement>('#candidate-status');
+
+  const element = (tag: string, text: string, className = '') => {
+    const node = document.createElement(tag);
+    node.textContent = text;
+    if (className) node.className = className;
+    return node;
+  };
+
+  form?.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    if (!rows || !status) return;
+    const token = document.querySelector<HTMLInputElement>('#admin-token')?.value || '';
+    status.textContent = 'Loading candidate queue...';
+    rows.replaceChildren();
+
+    try {
+      const response = await fetch('/api/admin/candidates', { headers: { authorization: `Bearer ${token}` } });
+      const result = await response.json();
+      if (!response.ok) {
+        status.textContent = result.error || 'Unable to load candidates.';
+        return;
+      }
+
+      const candidates = [...result.candidates].sort((left, right) =>
+        right.opportunityScore + right.qualityScore - (left.opportunityScore + left.qualityScore)
+      );
+      for (const candidate of candidates) {
+        const row = document.createElement('tr');
+        const identity = document.createElement('td');
+        identity.append(element('strong', candidate.title), element('div', candidate.primaryKeyword, 'meta'), element('div', `/${candidate.slug}`, 'meta'));
+        const type = element('td', String(candidate.pageType).replaceAll('_', ' '));
+        const scores = document.createElement('td');
+        const opportunity = document.createElement('div');
+        opportunity.append(element('span', String(candidate.opportunityScore), 'score'), ' opportunity');
+        const quality = document.createElement('div');
+        quality.append(element('span', String(candidate.qualityScore), 'score'), ' quality');
+        scores.append(opportunity, quality);
+        const gate = document.createElement('td');
+        gate.append(element('span', candidate.status, 'pill'), element('p', candidate.qualityGate?.notes?.[0] || 'Awaiting review.', 'meta'));
+        row.append(identity, type, scores, gate);
+        rows.append(row);
+      }
+      status.textContent = `${candidates.length} candidates loaded.`;
+    } catch {
+      status.textContent = 'The server could not be reached.';
+    }
+  });
+</script>
+
+<style>
+  .console-head { display: flex; justify-content: space-between; align-items: end; gap: 24px; margin-bottom: 14px; }
+  .console-head h2 { margin-bottom: 4px; }
+  .access-form { display: grid; grid-template-columns: minmax(180px, 240px) auto; gap: 7px 10px; align-items: end; }
+  .access-form label { grid-column: 1 / -1; font-size: .75rem; font-weight: 700; }
+  .access-form input { min-height: 40px; border: 1px solid #ccd4d0; padding: 8px 10px; }
+  .access-form button { min-height: 40px; border: 0; background: #153f34; color: white; padding: 0 16px; font-weight: 700; cursor: pointer; }
+  #candidate-status { margin-bottom: 14px; }
+  @media(max-width: 760px) { .console-head { display: grid; } .access-form { grid-template-columns: 1fr; width: 100%; } .access-form label { grid-column: auto; } }
+</style>

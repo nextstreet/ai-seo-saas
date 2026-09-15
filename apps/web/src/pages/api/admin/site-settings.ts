@@ -1,23 +1,12 @@
 import type { APIRoute } from 'astro';
+import { isAdminAuthorized } from '@/lib/admin-auth';
 import { getSiteConfig, normalizeSiteConfig } from '@/lib/site-config';
 import { getSupabaseAdmin } from '@/lib/supabase-admin';
 
 export const GET: APIRoute = async () => Response.json({ config: await getSiteConfig() });
 
-async function digest(value: string) {
-  const bytes = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(value));
-  return Array.from(new Uint8Array(bytes), (byte) => byte.toString(16).padStart(2, '0')).join('');
-}
-
-async function authorized(request: Request) {
-  const expected = import.meta.env.ADMIN_API_TOKEN || '';
-  const supplied = request.headers.get('authorization')?.replace(/^Bearer\s+/i, '') || '';
-  if (!expected || !supplied) return false;
-  return await digest(expected) === await digest(supplied);
-}
-
 export const POST: APIRoute = async ({ request }) => {
-  if (!await authorized(request)) return Response.json({ error: 'Invalid or missing admin token.' }, { status: 401 });
+  if (!await isAdminAuthorized(request)) return Response.json({ error: 'Invalid or missing admin token.' }, { status: 401 });
   const admin = getSupabaseAdmin();
   if (!admin) return Response.json({ error: 'Supabase server credentials are not configured.' }, { status: 503 });
 

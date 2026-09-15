@@ -99,7 +99,7 @@ export type CandidateContent = {
   opportunityScore: number;
   qualityScore: number;
   qualityGate: QualityGate;
-  status: 'candidate' | 'approved' | 'rejected';
+  status: 'idea' | 'candidate' | 'approved' | 'draft' | 'review' | 'published' | 'refresh' | 'archived';
 };
 
 export type PublishedContent = {
