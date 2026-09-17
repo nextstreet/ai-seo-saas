@@ -22,4 +22,10 @@ describe('site configuration', () => {
     expect(config.catalog[0]?.name).toBe('Edited Sweetheart');
     expect(config.catalog[0]?.type).toBe(defaultSiteConfig.catalog[0]?.type);
   });
+
+  it('keeps default hero actions aligned with renamed public routes', () => {
+    const config = normalizeSiteConfig({ routes: { collection: '/bags', customize: '/design-brief' } });
+    expect(config.hero.primaryHref).toBe('/bags');
+    expect(config.hero.secondaryHref).toBe('/design-brief');
+  });
 });

@@ -9,7 +9,7 @@ const featured = pages.find((page) => page.slug === 'ita-bag-insert-guide') || p
 const topicName = (type: string) => type === 'product' ? 'Bags' : type === 'design_inspiration' ? 'Design' : type === 'material_guide' ? 'Materials' : type === 'comparison' ? 'Compare' : 'Use';
 const topics = ['All','Bags','Design','Materials','Use','Compare'];
 ---
-<StoreLayout title={intro.title} description={intro.description} config={config}>
+<StoreLayout title={intro.title} description={intro.description} config={config} canonicalPath={config.routes.guides}>
   <div class="wrap page-head"><p class="eyebrow">{intro.eyebrow}</p><h1>{intro.title}</h1><p>{intro.description}</p></div>
   <section class="wrap section" style="padding-top:0">
     <div class="topic-strip" role="tablist" aria-label="Filter guides by topic">{topics.map((topic, index) => <button type="button" role="tab" aria-selected={index === 0 ? 'true' : 'false'} class={index === 0 ? 'active' : ''} data-topic={topic}>{topic}</button>)}</div>

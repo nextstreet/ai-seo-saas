@@ -120,8 +120,8 @@ export function normalizeSiteConfig(input: unknown): SiteConfig {
     hero: {
       eyebrow: textValue(raw.hero?.eyebrow, defaultSiteConfig.hero.eyebrow, 80), title: textValue(raw.hero?.title, defaultSiteConfig.hero.title, 100),
       description: textValue(raw.hero?.description, defaultSiteConfig.hero.description, 260), image: textValue(raw.hero?.image, defaultSiteConfig.hero.image, 300),
-      primaryLabel: textValue(raw.hero?.primaryLabel, defaultSiteConfig.hero.primaryLabel, 50), primaryHref: textValue(raw.hero?.primaryHref, defaultSiteConfig.hero.primaryHref, 200),
-      secondaryLabel: textValue(raw.hero?.secondaryLabel, defaultSiteConfig.hero.secondaryLabel, 50), secondaryHref: textValue(raw.hero?.secondaryHref, defaultSiteConfig.hero.secondaryHref, 200)
+      primaryLabel: textValue(raw.hero?.primaryLabel, defaultSiteConfig.hero.primaryLabel, 50), primaryHref: raw.hero?.primaryHref === defaultSiteConfig.hero.primaryHref ? routes.collection : textValue(raw.hero?.primaryHref, routes.collection, 200),
+      secondaryLabel: textValue(raw.hero?.secondaryLabel, defaultSiteConfig.hero.secondaryLabel, 50), secondaryHref: raw.hero?.secondaryHref === defaultSiteConfig.hero.secondaryHref ? routes.customize : textValue(raw.hero?.secondaryHref, routes.customize, 200)
     },
     benefits: Array.isArray(raw.benefits) ? raw.benefits.map((item: unknown) => textValue(item, '', 80)).filter(Boolean).slice(0, 6) : defaultSiteConfig.benefits,
     seo: { indexable: raw.seo?.indexable === true, ogImage: textValue(raw.seo?.ogImage, defaultSiteConfig.seo.ogImage, 300) },

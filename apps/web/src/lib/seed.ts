@@ -158,7 +158,7 @@ export const publishedContents: PublishedContent[] = candidates
   }));
 
 export const galleryItems: GalleryItem[] = [
-  { id: 'gallery-heart-pink', tenantId: tenant.id, title: 'Pink Heart Window Backpack', imageUrl: 'https://images.unsplash.com/photo-1605733160314-4fc7dac4bb16?auto=format&fit=crop&w=900&q=80', description: 'A cute idol-style direction for enamel pins and badges.', tags: ['heart window', 'pink', 'pins'], votesCount: 42 },
-  { id: 'gallery-minimal-black', tenantId: tenant.id, title: 'Minimal Black Daily Carry', imageUrl: 'https://images.unsplash.com/photo-1590874103328-eac38a683ce7?auto=format&fit=crop&w=900&q=80', description: 'A quieter style for daily use and subtle photocard display.', tags: ['black', 'minimal', 'photocards'], votesCount: 31 },
-  { id: 'gallery-plush-blue', tenantId: tenant.id, title: 'Soft Blue Plush Display', imageUrl: 'https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&w=900&q=80', description: 'A wider window concept for small plushies and charms.', tags: ['plush', 'blue', 'charms'], votesCount: 27 }
+  { id: 'gallery-heart-pink', tenantId: tenant.id, slug: 'sweetheart', title: 'Pink Heart Window Backpack', imageUrl: 'https://images.unsplash.com/photo-1605733160314-4fc7dac4bb16?auto=format&fit=crop&w=900&q=80', description: 'A cute idol-style direction for enamel pins and badges.', tags: ['heart window', 'pink', 'pins'], votesCount: 42 },
+  { id: 'gallery-minimal-black', tenantId: tenant.id, slug: 'after-hours', title: 'Minimal Black Daily Carry', imageUrl: 'https://images.unsplash.com/photo-1590874103328-eac38a683ce7?auto=format&fit=crop&w=900&q=80', description: 'A quieter style for daily use and subtle photocard display.', tags: ['black', 'minimal', 'photocards'], votesCount: 31 },
+  { id: 'gallery-plush-blue', tenantId: tenant.id, slug: 'mint-story', title: 'Soft Blue Plush Display', imageUrl: 'https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&w=900&q=80', description: 'A wider window concept for small plushies and charms.', tags: ['plush', 'blue', 'charms'], votesCount: 27 }
 ];

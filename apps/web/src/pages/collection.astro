@@ -6,7 +6,7 @@ const config = await getSiteConfig();
 const collection = config.catalog;
 const intro = config.pages.collection;
 ---
-<StoreLayout title={intro.title} description={intro.description} config={config}>
+<StoreLayout title={intro.title} description={intro.description} config={config} canonicalPath={config.routes.collection}>
   <div class="wrap page-head"><p class="eyebrow">{intro.eyebrow}</p><h1>{intro.title}</h1><div class="collection-intro"><p>{intro.description}</p><aside>Concept images show design direction. Materials, dimensions, pricing and production feasibility remain open until a maker confirms them.</aside></div></div>
   <section class="wrap section" style="padding-top:0">
     <div class="filters">

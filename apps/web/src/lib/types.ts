@@ -124,6 +124,7 @@ export type PublishedContent = {
 export type GalleryItem = {
   id: string;
   tenantId: string;
+  slug: string;
   title: string;
   imageUrl: string;
   description: string;

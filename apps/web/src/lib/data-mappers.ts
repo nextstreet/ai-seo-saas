@@ -76,6 +76,7 @@ export function mapGalleryItem(row: Row, votesCount = 0): GalleryItem {
   return {
     id: String(row.id),
     tenantId: String(row.tenant_id),
+    slug: String(row.slug || row.id),
     title: String(row.name),
     imageUrl: String(attributes.imageUrl || attributes.image_url || ''),
     description: String(row.description || ''),

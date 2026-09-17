@@ -2,9 +2,10 @@
 import StoreLayout from '@/components/StoreLayout.astro';
 import ConceptCard from '@/components/ConceptCard.astro';
 import { getSiteConfig } from '@/lib/site-config';
-export const prerender = true;
-export async function getStaticPaths() { const config = await getSiteConfig(); return config.catalog.map((item) => ({ params: { slug: item.slug }, props: { item, collection: config.catalog, config } })); }
-const { item, collection, config } = Astro.props;
+const config = await getSiteConfig();
+const collection = config.catalog;
+const item = collection.find((candidate) => candidate.slug === Astro.params.slug);
+if (!item) return Astro.redirect('/404', 302);
 const related = collection.filter((candidate) => candidate.slug !== item.slug).slice(0, 2);
 ---
 <StoreLayout title={`${item.name} Ita Bag Concept`} description={item.description} config={config}>
@@ -21,7 +22,7 @@ const related = collection.filter((candidate) => candidate.slug !== item.slug).s
 
   <section class="detail-band"><div class="wrap planning-layout"><div><p class="eyebrow">Before production</p><h2>Four points to confirm.</h2><p class="lede">A concept becomes useful when the display, carry and construction requirements are explicit.</p></div><ol class="planning-list">{item.planningPoints.map((point) => <li>{point}</li>)}</ol></div></section>
 
-  <section class="detail-band blue-band"><div class="wrap"><div class="section-head"><div><p class="eyebrow">Continue exploring</p><h2>Another way to carry it.</h2></div><a class="text-link" href="/collection">View the full collection <span aria-hidden="true">&rarr;</span></a></div><div class="three">{related.map((candidate) => <ConceptCard item={candidate} />)}<article class="signal"><p class="eyebrow">Build from your own idea</p><h3>Already know what you want?</h3><p>Turn the collection type, occasion and color direction into a downloadable design brief.</p><a class="button" href="/customize">Start from scratch</a></article></div></div></section>
+  <section class="detail-band blue-band"><div class="wrap"><div class="section-head"><div><p class="eyebrow">Continue exploring</p><h2>Another way to carry it.</h2></div><a class="text-link" href={config.routes.collection}>View the full collection <span aria-hidden="true">&rarr;</span></a></div><div class="three">{related.map((candidate) => <ConceptCard item={candidate} />)}<article class="signal"><p class="eyebrow">Build from your own idea</p><h3>Already know what you want?</h3><p>Turn the collection type, occasion and color direction into a downloadable design brief.</p><a class="button" href={config.routes.customize}>Start from scratch</a></article></div></div></section>
 </StoreLayout>
 <script>
   const mainImage = document.querySelector<HTMLImageElement>('#main-product')!;

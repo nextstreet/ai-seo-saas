@@ -5,7 +5,7 @@ const config = await getSiteConfig();
 const collection = config.catalog;
 const intro = config.pages.customize;
 ---
-<StoreLayout title={intro.title} description={intro.description} config={config}>
+<StoreLayout title={intro.title} description={intro.description} config={config} canonicalPath={config.routes.customize}>
   <div class="wrap page-head"><p class="eyebrow">{intro.eyebrow}</p><h1>{intro.title}</h1><p>{intro.description}</p></div>
   <section class="wrap section" style="padding-top:0">
     <div class="builder-progress"><span>01 / Collection</span><span>02 / Direction</span><span>03 / Brief</span></div>

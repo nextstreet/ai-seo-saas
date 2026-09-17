@@ -1,12 +1,12 @@
 ---
 import '@/styles/store.css';
 import { getSiteConfig, type SiteConfig } from '@/lib/site-config';
-interface Props { title:string; description?:string; config?: SiteConfig }
-const { title, description = 'Explore custom ita bag concepts, collect design inspiration and plan a bag around your favorite pins and photocards.', config: suppliedConfig } = Astro.props;
+interface Props { title:string; description?:string; config?: SiteConfig; canonicalPath?: string }
+const { title, description = 'Explore custom ita bag concepts, collect design inspiration and plan a bag around your favorite pins and photocards.', config: suppliedConfig, canonicalPath } = Astro.props;
 const config = suppliedConfig || await getSiteConfig();
 const routes = config.routes;
 const featured = config.catalog[0];
-const canonical = new URL(Astro.url.pathname, import.meta.env.PUBLIC_SITE_URL || 'http://localhost:4321');
+const canonical = new URL(canonicalPath || Astro.url.pathname, import.meta.env.PUBLIC_SITE_URL || 'http://localhost:4321');
 const themeStyle = [
   `--forest:${config.theme.primary}`, `--forest-2:${config.theme.primaryHover}`, `--rose:${config.theme.accent}`,
   `--mint:${config.theme.surface}`, `--blue:${config.theme.alternate}`, `--paper:${config.theme.page}`,
