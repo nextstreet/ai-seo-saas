@@ -20,6 +20,9 @@ export const PATCH: APIRoute = async ({ request, params }) => {
   let normalized;
   try { normalized = normalizeCandidateUpdate(await request.json(), current.status as CandidateContent['status']); }
   catch (error) { return Response.json({ error: (error as Error).message }, { status: 400 }); }
+  if (normalized.status !== current.status && ['approved', 'draft', 'review', 'published', 'refresh'].includes(current.status)) {
+    return Response.json({ error: 'Use the page publishing workflow for this status transition.' }, { status: 400 });
+  }
 
   const { data, error } = await admin.from('content_candidates').update(normalized.row).eq('tenant_id', tenant.id).eq('id', current.id).select('*').single();
   if (error) return Response.json({ error: error.message }, { status: error.code === '23505' ? 409 : 500 });

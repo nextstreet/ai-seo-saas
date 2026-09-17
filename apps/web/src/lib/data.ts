@@ -3,6 +3,16 @@ import { mapCandidate, mapGalleryItem, mapPublishedContent } from './data-mapper
 import { getSupabaseAdmin } from './supabase-admin';
 import type { CandidateContent, GalleryItem, PublishedContent } from './types';
 
+export function isSeedFallbackEnabled(dev = import.meta.env.DEV, explicit = process.env.ALLOW_SEED_FALLBACK || import.meta.env.ALLOW_SEED_FALLBACK) {
+  return dev || String(explicit).toLowerCase() === 'true';
+}
+
+const fallback = <T>(data: T[], label: string): T[] => {
+  if (isSeedFallbackEnabled()) return data;
+  console.error(`[data] ${label} is unavailable and seed fallback is disabled.`);
+  return [];
+};
+
 async function getTenantContext() {
   const admin = getSupabaseAdmin();
   if (!admin) return null;
@@ -18,7 +28,7 @@ async function getTenantContext() {
 
 export async function getPublishedContents(): Promise<PublishedContent[]> {
   const context = await getTenantContext();
-  if (!context) return publishedContents;
+  if (!context) return fallback(publishedContents, 'Published content');
 
   const { data, error } = await context.admin
     .from('content_pages')
@@ -29,7 +39,7 @@ export async function getPublishedContents(): Promise<PublishedContent[]> {
 
   if (error) {
     console.warn(`[data] Unable to load published content: ${error.message}`);
-    return publishedContents;
+    return fallback(publishedContents, 'Published content');
   }
 
   return (data || []).map(mapPublishedContent);
@@ -42,7 +52,7 @@ export async function getPublishedContent(slug: string): Promise<PublishedConten
 
 export async function getCandidates(): Promise<CandidateContent[]> {
   const context = await getTenantContext();
-  if (!context) return candidates;
+  if (!context) return fallback(candidates, 'Content candidates');
 
   const { data, error } = await context.admin
     .from('content_candidates')
@@ -52,7 +62,7 @@ export async function getCandidates(): Promise<CandidateContent[]> {
 
   if (error) {
     console.warn(`[data] Unable to load content candidates: ${error.message}`);
-    return candidates;
+    return fallback(candidates, 'Content candidates');
   }
 
   return (data || []).map(mapCandidate);
@@ -60,7 +70,7 @@ export async function getCandidates(): Promise<CandidateContent[]> {
 
 export async function getGalleryItems(): Promise<GalleryItem[]> {
   const context = await getTenantContext();
-  if (!context) return galleryItems;
+  if (!context) return fallback(galleryItems, 'Gallery content');
 
   const { data, error } = await context.admin
     .from('design_concepts')
@@ -70,7 +80,7 @@ export async function getGalleryItems(): Promise<GalleryItem[]> {
 
   if (error) {
     console.warn(`[data] Unable to load design concepts: ${error.message}`);
-    return galleryItems;
+    return fallback(galleryItems, 'Gallery content');
   }
 
   const { data: votes, error: votesError } = await context.admin

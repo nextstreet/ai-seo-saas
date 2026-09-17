@@ -363,7 +363,7 @@ const tr = (chinese: string, english: string) => adminText(locale, chinese, engl
       <nav class="shell nav" aria-label={tr('主导航', 'Primary')}>
         <a class="brand" href={adminArea ? '/admin' : '/'}>Ita SEO OS</a>
         <div class="navlinks">
-          {adminArea ? <><a href="/admin">{tr('内容管理', 'Content')}</a><a href="/admin/site">{tr('前台设置', 'Storefront')}</a><a href="/admin/site#catalog">{tr('项目管理', 'Projects')}</a><a href="/" target="_blank">{tr('查看网站', 'View site')}</a><button id="admin-logout" type="button">{tr('退出', 'Log out')}</button></> : !isAdminPath && <><a href="/admin">CMS</a><a href="/gallery">Gallery</a></>}
+          {adminArea ? <><a href="/admin">{tr('候选内容', 'Candidates')}</a><a href="/admin/pages">{tr('页面管理', 'Pages')}</a><a href="/admin/site">{tr('前台设置', 'Storefront')}</a><a href="/admin/site#catalog">{tr('项目管理', 'Projects')}</a><a href="/" target="_blank">{tr('查看网站', 'View site')}</a><button id="admin-logout" type="button">{tr('退出', 'Log out')}</button></> : !isAdminPath && <><a href="/admin">CMS</a><a href="/gallery">Gallery</a></>}
           {isAdminPath && <form class="language-switch" action="/api/admin/locale" method="post"><input type="hidden" name="next" value={Astro.url.pathname} /><button name="locale" value="zh" aria-pressed={locale === 'zh'} title="切换为中文">中文</button><button name="locale" value="en" aria-pressed={locale === 'en'} title="Switch to English">EN</button></form>}
         </div>
       </nav>

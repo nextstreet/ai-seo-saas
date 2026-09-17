@@ -100,6 +100,7 @@ export type CandidateContent = {
   qualityScore: number;
   qualityGate: QualityGate;
   status: 'idea' | 'candidate' | 'approved' | 'draft' | 'review' | 'published' | 'refresh' | 'archived';
+  pageId?: string;
 };
 
 export type PublishedContent = {
@@ -119,6 +120,15 @@ export type PublishedContent = {
   }>;
   internalLinks: Array<{ label: string; slug: string }>;
   publishedAt: string;
+};
+
+export type ContentPageStatus = 'draft' | 'review' | 'published' | 'refresh' | 'archived';
+
+export type ManagedContentPage = PublishedContent & {
+  status: ContentPageStatus;
+  primaryIntent: string;
+  contentVersion: number;
+  updatedAt: string;
 };
 
 export type GalleryItem = {

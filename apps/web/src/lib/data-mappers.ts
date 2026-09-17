@@ -1,4 +1,4 @@
-import type { CandidateContent, GalleryItem, PageType, PublishedContent, QualityGate } from './types';
+import type { CandidateContent, GalleryItem, ManagedContentPage, PageType, PublishedContent, QualityGate } from './types';
 
 type Row = Record<string, unknown>;
 
@@ -36,6 +36,16 @@ export function mapPublishedContent(row: Row): PublishedContent {
   };
 }
 
+export function mapManagedContentPage(row: Row): ManagedContentPage {
+  return {
+    ...mapPublishedContent(row),
+    status: row.status as ManagedContentPage['status'],
+    primaryIntent: String(row.primary_intent || ''),
+    contentVersion: numberValue(row.content_version, 1),
+    updatedAt: String(row.updated_at || '')
+  };
+}
+
 export function mapCandidate(row: Row): CandidateContent {
   const storedGate = objectValue(row.quality_gate);
   const uniqueness = numberValue(storedGate.uniqueness, numberValue(row.uniqueness_score));
@@ -67,7 +77,8 @@ export function mapCandidate(row: Row): CandidateContent {
     opportunityScore: numberValue(row.opportunity_score),
     qualityScore: numberValue(row.quality_score, derivedQuality),
     qualityGate,
-    status: row.status as CandidateContent['status']
+    status: row.status as CandidateContent['status'],
+    ...(row.existing_page_id ? { pageId: String(row.existing_page_id) } : {})
   };
 }
 

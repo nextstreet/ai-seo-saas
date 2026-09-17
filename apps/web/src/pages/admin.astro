@@ -83,11 +83,11 @@ const statusLabels = locale === 'zh'
 <script>
   const isZh = document.documentElement.lang === 'zh-CN';
   const ui = isZh ? {
-    opportunity: '机会', quality: '质量', passed: '已通过', needsWork: '需完善', awaiting: '等待审核。', edit: '编辑',
+    opportunity: '机会', quality: '质量', passed: '已通过', needsWork: '需完善', awaiting: '等待审核。', edit: '编辑', createDraft: '创建草稿', managePage: '管理页面', draftReason: '已通过质量门槛，创建编辑草稿。',
     shown: (shown: number, total: number) => `显示 ${shown} 条，共 ${total} 条候选内容。`, current: (status: string) => `当前状态：${status}。保存时将重新计算质量分。`,
     loading: '正在加载候选队列...', loadError: '无法加载候选内容。', serverError: '无法连接服务器。', saving: '正在保存候选内容...', saveError: '无法保存候选内容。'
   } : {
-    opportunity: 'opportunity', quality: 'quality', passed: 'passed', needsWork: 'needs work', awaiting: 'Awaiting review.', edit: 'Edit',
+    opportunity: 'opportunity', quality: 'quality', passed: 'passed', needsWork: 'needs work', awaiting: 'Awaiting review.', edit: 'Edit', createDraft: 'Create draft', managePage: 'Manage page', draftReason: 'Quality gate passed; create editorial draft.',
     shown: (shown: number, total: number) => `${shown} of ${total} candidates shown.`, current: (status: string) => `Current status: ${status}. Quality score is recalculated on save.`,
     loading: 'Loading candidate queue...', loadError: 'Unable to load candidates.', serverError: 'The server could not be reached.', saving: 'Saving candidate...', saveError: 'Unable to save candidate.'
   };
@@ -107,7 +107,7 @@ const statusLabels = locale === 'zh'
   const statusSelect = document.querySelector<HTMLSelectElement>('#candidate-status-select');
   let queue: any[] = [];
 
-  const transitions: Record<string, string[]> = { idea: ['candidate', 'archived'], candidate: ['approved', 'archived'], approved: ['draft', 'archived'], draft: ['review', 'archived'], review: ['draft', 'published', 'archived'], published: ['refresh', 'archived'], refresh: ['draft', 'archived'], archived: [] };
+  const transitions: Record<string, string[]> = { idea: ['candidate', 'archived'], candidate: ['approved', 'archived'], approved: ['archived'], draft: [], review: [], published: [], refresh: [], archived: [] };
 
   const element = (tag: string, text: string, className = '') => {
     const node = document.createElement(tag);
@@ -136,10 +136,30 @@ const statusLabels = locale === 'zh'
       const action = document.createElement('td');
       const edit = element('button', ui.edit, 'button') as HTMLButtonElement;
       edit.type = 'button'; edit.addEventListener('click', () => openEditor(candidate)); action.append(edit);
+      if (candidate.status === 'approved' && candidate.qualityGate?.passed) {
+        const draft = element('button', ui.createDraft, 'button primary') as HTMLButtonElement;
+        draft.type = 'button'; draft.addEventListener('click', () => createDraft(candidate, draft)); action.append(' ', draft);
+      } else if (candidate.pageId) {
+        const page = element('a', ui.managePage, 'button') as HTMLAnchorElement;
+        page.href = `/admin/pages/${candidate.pageId}`; action.append(' ', page);
+      }
       row.append(identity, type, scores, gate, action);
       rows.append(row);
     }
     status.textContent = ui.shown(candidates.length, queue.length);
+  }
+
+  async function createDraft(candidate: any, button: HTMLButtonElement) {
+    button.disabled = true;
+    try {
+      const response = await fetch(`/api/admin/candidates/${candidate.id}/draft`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ reason: ui.draftReason }) });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error);
+      window.location.href = `/admin/pages/${result.pageId}`;
+    } catch (error) {
+      if (status) status.textContent = (error as Error).message;
+      button.disabled = false;
+    }
   }
 
   function setField(name: string, value: unknown) {
