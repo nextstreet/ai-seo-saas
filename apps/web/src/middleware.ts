@@ -2,7 +2,7 @@ import { defineMiddleware } from 'astro:middleware';
 import { isAdminAuthorized } from '@/lib/admin-auth';
 import { getSiteConfig } from '@/lib/site-config';
 
-const publicAdminPaths = new Set(['/admin/login', '/api/admin/login', '/api/admin/logout']);
+const publicAdminPaths = new Set(['/admin/login', '/api/admin/login', '/api/admin/logout', '/api/admin/locale']);
 const routeTargets = { collection: '/collection', gallery: '/gallery', customize: '/customize', guides: '/guides' } as const;
 
 export const onRequest = defineMiddleware(async (context, next) => {

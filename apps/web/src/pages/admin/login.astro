@@ -1,29 +1,33 @@
 ---
 import BaseLayout from '@/components/BaseLayout.astro';
+import { adminText, getAdminLocale } from '@/lib/admin-locale';
+const locale = getAdminLocale(Astro.cookies.get('admin_locale')?.value);
+const tr = (chinese: string, english: string) => adminText(locale, chinese, english);
 ---
-<BaseLayout title="Admin login | Ita SEO OS" description="Secure access to storefront, content and route management.">
+<BaseLayout title={`${tr('后台登录', 'Admin login')} | Ita SEO OS`} description={tr('安全访问前台、内容和路由管理。', 'Secure access to storefront, content and route management.')}>
   <main class="login-shell">
     <form id="login-form" class="login-panel">
       <p class="kicker">Ita SEO OS</p>
-      <h1>Sign in to the workspace</h1>
-      <p>Manage storefront content, concepts, modules and publishing rules.</p>
-      <label>Account<input id="username" name="username" autocomplete="username" required autofocus /></label>
-      <label>Password<input id="password" name="password" type="password" autocomplete="current-password" required /></label>
-      <button type="submit">Sign in</button>
+      <h1>{tr('登录管理后台', 'Sign in to the workspace')}</h1>
+      <p>{tr('管理前台内容、设计项目、页面模块和发布规则。', 'Manage storefront content, concepts, modules and publishing rules.')}</p>
+      <label>{tr('账号', 'Account')}<input id="username" name="username" autocomplete="username" required autofocus /></label>
+      <label>{tr('密码', 'Password')}<input id="password" name="password" type="password" autocomplete="current-password" required /></label>
+      <button type="submit">{tr('登录', 'Sign in')}</button>
       <p id="login-status" role="status"></p>
     </form>
   </main>
   <script>
+    const isZh = document.documentElement.lang === 'zh-CN';
     const form = document.querySelector<HTMLFormElement>('#login-form');
     const status = document.querySelector<HTMLElement>('#login-status');
     form?.addEventListener('submit', async (event) => {
       event.preventDefault();
       if (!status) return;
-      status.textContent = 'Signing in...';
+      status.textContent = isZh ? '正在登录...' : 'Signing in...';
       const data = new FormData(form);
       const response = await fetch('/api/admin/login', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(Object.fromEntries(data)) });
       const result = await response.json();
-      if (!response.ok) { status.textContent = result.error || 'Sign in failed.'; return; }
+      if (!response.ok) { status.textContent = isZh ? '账号或密码错误，或后台登录尚未配置。' : result.error || 'Sign in failed.'; return; }
       const next = new URLSearchParams(location.search).get('next');
       location.href = next?.startsWith('/admin') ? next : '/admin';
     });
