@@ -1,0 +1,66 @@
+---
+import StoreLayout from '@/components/StoreLayout.astro';
+import { getSiteConfig } from '@/lib/site-config';
+const config = await getSiteConfig();
+const collection = config.catalog;
+const intro = config.pages.customize;
+---
+<StoreLayout title={intro.title} description={intro.description} config={config} canonicalPath={config.routes.customize}>
+  <div class="wrap page-head"><p class="eyebrow">{intro.eyebrow}</p><h1>{intro.title}</h1><p>{intro.description}</p></div>
+  <section class="wrap section" style="padding-top:0">
+    <div class="builder-progress"><span>01 / Collection</span><span>02 / Direction</span><span>03 / Brief</span></div>
+    <div class="builder-shell">
+      <form id="brief" class="brief-form">
+        <section class="form-section"><p class="eyebrow">01 / Start with the collection</p><h2>What needs its own window?</h2><div class="radio-cards">{['Pins','Photocards','Plushies'].map((value) => <label class="radio-card"><input type="radio" name="display" value={value} checked={value === 'Pins'} /><span>{value}</span></label>)}</div><div class="form-grid" style="margin-top:18px"><label class="field">Approximate number of pieces<input name="quantity" type="number" min="1" max="100" value="12" required /></label><label class="field">Largest piece or sleeve size<input name="largestItem" maxlength="100" placeholder="Add a measurement if known" /><small>Optional; use the same unit throughout.</small></label></div></section>
+        <section class="form-section"><p class="eyebrow">02 / Choose a direction</p><h2>How should the bag fit your life?</h2><div class="form-grid"><label class="field">Starting concept<select name="design">{collection.map((item) => <option value={item.slug}>{item.name} / {item.type}</option>)}</select></label><label class="field">Where will it go?<select name="occasion"><option>Everyday</option><option>Conventions</option><option>A gift or fan project</option></select></label><label class="field">Preferred bag shape<select name="shape"><option>Backpack</option><option>Crossbody</option><option>Tote</option><option>Open to recommendation</option></select></label><label class="field">Window direction<select name="window"><option>Heart</option><option>Rectangle</option><option>Custom shape</option><option>Open to recommendation</option></select></label><label class="field full">Color and mood<input name="color" maxlength="120" placeholder="Blush pink, silver details, playful..." /></label></div></section>
+        <section class="form-section"><p class="eyebrow">03 / Add practical notes</p><h2>What should the maker understand?</h2><div class="form-grid"><label class="field">Most important priority<select name="priority"><option>Display impact</option><option>Comfort for long use</option><option>Compact daily carry</option><option>Protection for the collection</option><option>Flexible layout changes</option></select></label><label class="field">Insert preference<select name="insert"><option>Removable insert</option><option>Fixed display area</option><option>Open to recommendation</option></select></label><label class="field full">Notes and references<textarea name="notes" rows="5" maxlength="2000" placeholder="Describe favorite details, layout ideas, constraints or questions..."></textarea></label></div></section>
+        <div class="actions"><button class="button" type="submit">Save my brief</button><button class="button light" id="download" type="button">Download brief</button><button class="text-link" id="reset" type="button">Reset</button></div><p id="status" class="status" role="status"></p>
+      </form>
+      <aside class="brief-preview"><img id="preview" src={collection[0].image} alt="Selected bag concept" width="1024" height="1024" /><p class="eyebrow">Live planning summary</p><h2 id="design-name">{collection[0].name}</h2><div class="recommendation-box"><b id="direction">Pins / Backpack / Everyday</b><p id="recommendation"></p></div><ul class="decision-list"><li><strong>Window</strong><span id="window-summary">Heart</span></li><li><strong>Priority</strong><span id="priority-summary">Display impact</span></li><li><strong>Insert</strong><span id="insert-summary">Removable insert</span></li></ul><p class="small">This creates a design brief, not an order. Materials, dimensions, pricing and availability require maker confirmation.</p></aside>
+    </div>
+  </section>
+</StoreLayout>
+<script id="configured-catalog" type="application/json" is:inline set:html={JSON.stringify(collection)}></script>
+<script>
+  import type { CollectionItem } from '@/lib/collection';
+  const collection = JSON.parse(document.querySelector('#configured-catalog')?.textContent || '[]') as CollectionItem[];
+  const form = document.querySelector<HTMLFormElement>('#brief')!;
+  const status = document.querySelector('#status')!;
+  const fields = ['design','display','quantity','largestItem','occasion','shape','window','color','priority','insert','notes'];
+  function getField(name: string) { return form.elements.namedItem(name) as RadioNodeList | HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement; }
+  function restore() { try { const saved = JSON.parse(localStorage.getItem('ita-brief') || '{}'); for (const name of fields) { const field = getField(name); if (saved[name] !== undefined) field.value = String(saved[name]); } } catch {} }
+  restore();
+  const selected = new URLSearchParams(location.search).get('design');
+  function applyConcept(slug: string) {
+    const item = collection.find((candidate) => candidate.slug === slug);
+    if (!item) return;
+    getField('design').value = item.slug;
+    getField('display').value = item.display;
+    getField('shape').value = item.type;
+    getField('window').value = item.window;
+    if (!getField('color').value) getField('color').value = `${item.color}, ${item.mood.toLowerCase()}`;
+  }
+  if (selected) applyConcept(selected);
+  function values() { return Object.fromEntries(new FormData(form).entries()) as Record<string,string>; }
+  function preview() {
+    const data = values();
+    const item = collection.find((candidate) => candidate.slug === data.design) || collection[0];
+    document.querySelector<HTMLImageElement>('#preview')!.src = item.image;
+    document.querySelector('#design-name')!.textContent = item.name;
+    document.querySelector('#direction')!.textContent = `${data.display} / ${data.shape} / ${data.occasion}`;
+    document.querySelector('#window-summary')!.textContent = data.window;
+    document.querySelector('#priority-summary')!.textContent = data.priority;
+    document.querySelector('#insert-summary')!.textContent = data.insert;
+    const quantity = Number(data.quantity || 0);
+    const volume = quantity > 24 ? 'A larger display means insert strength and total weight should be reviewed early.' : quantity > 8 ? 'A medium collection benefits from a clear focal piece and measured spacing.' : 'A smaller collection can use more negative space or a compact window.';
+    const object = data.display === 'Photocards' ? 'Measure every card with its protective sleeve.' : data.display === 'Plushies' ? 'Record plush depth as well as width and height.' : 'Record the largest pin face and attachment depth.';
+    document.querySelector('#recommendation')!.textContent = `${volume} ${object}`;
+  }
+  form.addEventListener('input', preview);
+  const designSelect = getField('design') as HTMLSelectElement;
+  designSelect.addEventListener('change', () => { applyConcept(designSelect.value); preview(); });
+  form.addEventListener('submit', (event) => { event.preventDefault(); try { localStorage.setItem('ita-brief', JSON.stringify(values())); status.textContent = 'Your brief is saved on this device.'; } catch { status.textContent = 'Browser storage is unavailable. Download the brief to keep a copy.'; } });
+  document.querySelector('#download')!.addEventListener('click', () => { if (!form.reportValidity()) return; const data = values(); const lines = ['ITA ATELIER - DESIGN BRIEF','Concept planning document. Not an order.','',...Object.entries(data).map(([key,value]) => `${key}: ${value}`)]; const url = URL.createObjectURL(new Blob([lines.join('\n')], { type:'text/plain;charset=utf-8' })); const link = document.createElement('a'); link.href = url; link.download = 'ita-design-brief.txt'; link.click(); URL.revokeObjectURL(url); status.textContent = 'Your design brief has been downloaded.'; });
+  document.querySelector('#reset')!.addEventListener('click', () => { form.reset(); localStorage.removeItem('ita-brief'); status.textContent = 'The brief has been reset.'; preview(); });
+  preview();
+</script>

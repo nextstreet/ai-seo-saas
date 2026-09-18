@@ -1,0 +1,42 @@
+---
+import BaseLayout from '@/components/BaseLayout.astro';
+import { adminText, getAdminLocale } from '@/lib/admin-locale';
+const locale = getAdminLocale(Astro.cookies.get('admin_locale')?.value);
+const tr = (zh: string, en: string) => adminText(locale, zh, en);
+---
+<BaseLayout title={`${tr('页面管理', 'Pages')} | Ita SEO OS`} description={tr('编辑并发布 SEO 页面。', 'Edit and publish SEO pages.')}>
+  <section class="shell hero admin-head">
+    <div><p class="kicker">SEO Core</p><h1>{tr('页面管理', 'Content pages')}</h1><p class="lede">{tr('草稿、审核、发布与更新状态均与候选内容同步。', 'Draft, review, publication and refresh states stay synchronized with their candidates.')}</p></div>
+    <a class="button" href="/admin">{tr('返回候选内容', 'Back to candidates')}</a>
+  </section>
+  <section class="shell band">
+    <div class="toolbar"><label>{tr('状态筛选', 'Status')}<select id="page-filter"><option value="">{tr('全部', 'All')}</option><option value="draft">{tr('草稿', 'Draft')}</option><option value="review">{tr('审核中', 'Review')}</option><option value="published">{tr('已发布', 'Published')}</option><option value="refresh">{tr('待更新', 'Refresh')}</option><option value="archived">{tr('已归档', 'Archived')}</option></select></label><button class="button" id="refresh" type="button">{tr('刷新', 'Refresh')}</button></div>
+    <p id="status" class="meta" role="status">{tr('正在加载...', 'Loading...')}</p>
+    <table><thead><tr><th>{tr('页面', 'Page')}</th><th>{tr('类型', 'Type')}</th><th>{tr('状态', 'Status')}</th><th>{tr('版本', 'Version')}</th><th><span class="sr-only">{tr('操作', 'Actions')}</span></th></tr></thead><tbody id="rows"></tbody></table>
+  </section>
+</BaseLayout>
+<script>
+  const isZh = document.documentElement.lang === 'zh-CN';
+  const labels: Record<string,string> = isZh ? {draft:'草稿',review:'审核中',published:'已发布',refresh:'待更新',archived:'已归档'} : {draft:'Draft',review:'Review',published:'Published',refresh:'Refresh',archived:'Archived'};
+  const rows = document.querySelector<HTMLTableSectionElement>('#rows');
+  const status = document.querySelector<HTMLElement>('#status');
+  const filter = document.querySelector<HTMLSelectElement>('#page-filter');
+  let pages: any[] = [];
+  const node = (tag:string,text:string,className='') => { const el=document.createElement(tag); el.textContent=text; el.className=className; return el; };
+  function render(){
+    if(!rows||!status)return; rows.replaceChildren();
+    const shown=pages.filter(page=>!filter?.value||page.status===filter.value);
+    for(const page of shown){
+      const row=document.createElement('tr'); const identity=document.createElement('td');
+      identity.append(node('strong',page.title),node('div',`/content/${page.slug}`,'meta'));
+      const action=document.createElement('td'); const link=document.createElement('a'); link.className='button'; link.href=`/admin/pages/${page.id}`; link.textContent=isZh?'编辑':'Edit'; action.append(link);
+      row.append(identity,node('td',String(page.pageType).replaceAll('_',' ')),node('td',labels[page.status]||page.status,'pill-cell'),node('td',String(page.contentVersion)),action); rows.append(row);
+    }
+    status.textContent=isZh?`显示 ${shown.length} 个页面。`:`${shown.length} pages shown.`;
+  }
+  async function load(){ if(status)status.textContent=isZh?'正在加载...':'Loading...'; try{const response=await fetch('/api/admin/pages'); const result=await response.json(); if(!response.ok)throw new Error(result.error); pages=result.pages; render();}catch(error){if(status)status.textContent=(error as Error).message;} }
+  filter?.addEventListener('change',render); document.querySelector('#refresh')?.addEventListener('click',load); load();
+</script>
+<style>
+  .admin-head{grid-template-columns:1fr auto;align-items:end}.toolbar{display:flex;justify-content:flex-end;align-items:end;gap:10px;margin-bottom:14px}.toolbar label{display:grid;gap:4px;font-size:12px;color:var(--muted)}select{min-height:38px;border:1px solid var(--line);background:#fff;padding:0 10px}.pill-cell{font-weight:700}.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}@media(max-width:760px){.admin-head{grid-template-columns:1fr}table{display:block;overflow-x:auto}}
+</style>

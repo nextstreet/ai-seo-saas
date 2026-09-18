@@ -1,0 +1,118 @@
+---
+import BaseLayout from '@/components/BaseLayout.astro';
+import { adminText, getAdminLocale } from '@/lib/admin-locale';
+import { getSiteConfig, homeSectionKeys, routeKeys } from '@/lib/site-config';
+const config = await getSiteConfig();
+const locale = getAdminLocale(Astro.cookies.get('admin_locale')?.value);
+const tr = (chinese: string, english: string) => adminText(locale, chinese, english);
+const sectionLabels = locale === 'zh'
+  ? { browse: '浏览入口', collection: '概念产品集', process: '定制流程', decision: '决策指南', community: '社区反馈', guides: '内容指南' }
+  : { browse: 'Browse paths', collection: 'Concept collection', process: 'Custom process', decision: 'Decision guide', community: 'Community signals', guides: 'Field notes' };
+const routeLabels = locale === 'zh' ? { collection: '产品集合', gallery: '设计图库', customize: '定制工具', guides: '内容指南' } : { collection: 'Collection', gallery: 'Gallery', customize: 'Customize', guides: 'Guides' };
+const navigationLabels = locale === 'zh' ? { bags: '产品菜单', create: '创建设计', studio: '设计工作室', guides: '内容指南', cta: '主行动按钮' } : { bags: 'Bags', create: 'Create', studio: 'Studio', guides: 'Guides', cta: 'CTA' };
+const announcementLabels = locale === 'zh' ? { primary: '主公告', secondary: '次公告', linkLabel: '公告链接文字' } : { primary: 'Primary', secondary: 'Secondary', linkLabel: 'Link label' };
+---
+<BaseLayout title={`${tr('前台设置', 'Site settings')} | Ita SEO OS`} description={tr('管理网站品牌、导航、视觉和首页布局。', 'Control public site branding, navigation, appearance and homepage layout.')}>
+  <section class="shell hero admin-hero" style="grid-template-columns: 1fr auto;">
+    <div><p class="kicker">{tr('前台展示控制', 'Presentation control')}</p><h1>{tr('前台设置', 'Site settings')}</h1><p class="lede">{tr('无需修改模板即可管理公开网站。所有设置按租户隔离，并通过受保护的服务端接口发布。', 'Manage the public storefront without changing templates. Settings are tenant-specific and published through the protected server API.')}</p></div>
+    <a class="button secondary" href="/admin">{tr('返回内容管理', 'Content console')}</a>
+  </section>
+
+  <form class="shell settings" id="site-settings">
+    <section class="card setting-block"><div><p class="kicker">{tr('品牌识别', 'Identity')}</p><h2>{tr('品牌与导航', 'Brand and navigation')}</h2></div><div class="form-grid">
+      <label>{tr('品牌名称', 'Brand name')}<input name="brand.name" value={config.brand.name} required /></label><label>{tr('品牌后缀', 'Brand suffix')}<input name="brand.suffix" value={config.brand.suffix} required /></label>
+      <label class="wide">{tr('品牌简介', 'Brand description')}<textarea name="brand.tagline" rows="2">{config.brand.tagline}</textarea></label>
+      {Object.entries(config.navigation).map(([key, value]) => <label>{navigationLabels[key as keyof typeof navigationLabels]}<input name={`navigation.${key}`} value={value} required /></label>)}
+      {Object.entries(config.announcement).map(([key, value]) => <label>{announcementLabels[key as keyof typeof announcementLabels]}<input name={`announcement.${key}`} value={value} required /></label>)}
+    </div></section>
+
+    <section class="card setting-block"><div><p class="kicker">{tr('路由管理', 'Routing')}</p><h2>{tr('公开页面路径', 'Public paths')}</h2><p class="meta">{tr('使用 /bags 或 /design-studio 这类小写路径。/admin、/api、/content 和 /designs 为系统保留路径。', 'Use lowercase paths such as /bags or /design-studio. Admin, API, content and design paths are reserved.')}</p></div><div class="form-grid">
+      {routeKeys.map((key) => <label>{routeLabels[key]} {tr('路径', 'path')}<input name={`routes.${key}`} value={config.routes[key]} pattern="/[a-z0-9/-]+" required /></label>)}
+    </div></section>
+
+    <section class="card setting-block"><div><p class="kicker">{tr('首屏内容', 'First viewport')}</p><h2>{tr('首页主视觉', 'Homepage hero')}</h2></div><div class="form-grid">
+      <label>{tr('眉题', 'Eyebrow')}<input name="hero.eyebrow" value={config.hero.eyebrow} /></label><label>{tr('图片路径', 'Image path')}<input name="hero.image" value={config.hero.image} /></label>
+      <label class="wide">{tr('主标题', 'Headline')}<textarea name="hero.title" rows="2">{config.hero.title}</textarea></label><label class="wide">{tr('说明文字', 'Description')}<textarea name="hero.description" rows="3">{config.hero.description}</textarea></label>
+      <label>{tr('主按钮文字', 'Primary label')}<input name="hero.primaryLabel" value={config.hero.primaryLabel} /></label><label>{tr('主按钮链接', 'Primary link')}<input name="hero.primaryHref" value={config.hero.primaryHref} /></label>
+      <label>{tr('次按钮文字', 'Secondary label')}<input name="hero.secondaryLabel" value={config.hero.secondaryLabel} /></label><label>{tr('次按钮链接', 'Secondary link')}<input name="hero.secondaryHref" value={config.hero.secondaryHref} /></label>
+      <label class="wide">{tr('优势条目，每行一条', 'Benefit strip, one item per line')}<textarea name="benefits" rows="4">{config.benefits.join('\n')}</textarea></label>
+      <label>{tr('社媒预览图', 'Social preview image')}<input name="seo.ogImage" value={config.seo.ogImage} /></label><label class="switch"><input type="checkbox" name="seo.indexable" checked={config.seo.indexable} /> {tr('允许搜索引擎收录', 'Allow search indexing')}</label>
+      <label>{tr('页脚眉题', 'Footer eyebrow')}<input name="footer.eyebrow" value={config.footer.eyebrow} /></label><label>{tr('页脚标题', 'Footer headline')}<input name="footer.title" value={config.footer.title} /></label>
+    </div></section>
+
+    <section class="card setting-block"><div><p class="kicker">{tr('视觉系统', 'System')}</p><h2>{tr('主题与布局密度', 'Theme and density')}</h2></div><div class="color-grid">
+      {Object.entries(config.theme).map(([key, value]) => <label><span>{key.replace(/([A-Z])/g, ' $1')}</span><span class="color-control"><input type="color" name={`theme.${key}`} value={value} /><code>{value}</code></span></label>)}
+    </div><div class="form-grid compact-grid">
+      <label>{tr('内容最大宽度', 'Content width')}<input type="number" name="layout.contentMax" min="960" max="1600" step="20" value={config.layout.contentMax} /></label>
+      <label>{tr('区块垂直间距', 'Section spacing')}<input type="number" name="layout.sectionSpacing" min="48" max="120" step="4" value={config.layout.sectionSpacing} /></label>
+      <label>{tr('卡片列数', 'Card columns')}<select name="layout.cardColumns"><option value="2" selected={config.layout.cardColumns === 2}>2</option><option value="3" selected={config.layout.cardColumns === 3}>3</option><option value="4" selected={config.layout.cardColumns === 4}>4</option></select></label>
+    </div></section>
+
+    <section class="card setting-block"><div><p class="kicker">{tr('页面编排', 'Composition')}</p><h2>{tr('首页模块', 'Homepage sections')}</h2></div><div class="section-list">
+      {config.home.sectionOrder.map((key, index) => <div class="section-row"><strong>{sectionLabels[key]}</strong><label class="switch"><input type="checkbox" name={`visible.${key}`} checked={config.home.visible[key]} /> {tr('显示', 'Visible')}</label><label>{tr('位置', 'Position')}<select name={`order.${key}`}>{homeSectionKeys.map((_, optionIndex) => <option value={optionIndex + 1} selected={optionIndex === index}>{optionIndex + 1}</option>)}</select></label></div>)}
+      <div class="module-copy">{homeSectionKeys.map((key) => <fieldset><legend>{sectionLabels[key]}</legend><label>{tr('眉题', 'Eyebrow')}<input name={`sections.${key}.eyebrow`} value={config.home.sections[key].eyebrow} /></label><label>{tr('标题', 'Heading')}<input name={`sections.${key}.title`} value={config.home.sections[key].title} /></label><label>{tr('说明文字', 'Description')}<textarea name={`sections.${key}.description`} rows="2">{config.home.sections[key].description}</textarea></label><label>{tr('链接文字', 'Link label')}<input name={`sections.${key}.ctaLabel`} value={config.home.sections[key].ctaLabel} /></label></fieldset>)}</div>
+    </div></section>
+
+    <section class="card setting-block"><div><p class="kicker">{tr('页面首屏', 'Page headers')}</p><h2>{tr('主要页面内容', 'Primary page content')}</h2></div><div class="module-copy">{routeKeys.map((key) => <fieldset><legend>{routeLabels[key]}</legend><label>{tr('眉题', 'Eyebrow')}<input name={`pages.${key}.eyebrow`} value={config.pages[key].eyebrow} /></label><label>{tr('页面标题', 'Page title')}<input name={`pages.${key}.title`} value={config.pages[key].title} /></label><label>{tr('说明文字', 'Description')}<textarea name={`pages.${key}.description`} rows="3">{config.pages[key].description}</textarea></label></fieldset>)}</div></section>
+
+    <section class="card setting-block" id="catalog"><div><p class="kicker">{tr('设计概念', 'Concepts')}</p><h2>{tr('核心项目', 'Core projects')}</h2><p class="meta">{tr('这些项目会同步用于首页卡片、产品筛选、设计图库、详情页和定制需求生成器。', 'These entries feed homepage cards, collection filters, the gallery, design pages and the brief builder.')}</p></div><div class="catalog-grid">{config.catalog.map((item, index) => <fieldset><legend>{item.name}</legend><div class="form-grid"><label>{tr('名称', 'Name')}<input name={`catalog.${index}.name`} value={item.name} /></label><label>Slug<input name={`catalog.${index}.slug`} value={item.slug} /></label><label>{tr('包型', 'Type')}<select name={`catalog.${index}.type`}>{['Backpack','Crossbody','Tote'].map((value) => <option selected={item.type === value}>{value}</option>)}</select></label><label>{tr('展示内容', 'Display')}<select name={`catalog.${index}.display`}>{['Pins','Photocards'].map((value) => <option selected={item.display === value}>{value}</option>)}</select></label><label>{tr('颜色', 'Color')}<input name={`catalog.${index}.color`} value={item.color} /></label><label>{tr('色板', 'Swatch')}<input type="color" name={`catalog.${index}.swatch`} value={item.swatch} /></label><label class="wide">{tr('图片路径', 'Image path')}<input name={`catalog.${index}.image`} value={item.image} /></label><label>{tr('风格', 'Mood')}<select name={`catalog.${index}.mood`}>{['Playful','Soft','Minimal'].map((value) => <option selected={item.mood === value}>{value}</option>)}</select></label><label>{tr('使用场景', 'Occasion')}<select name={`catalog.${index}.occasion`}>{['Conventions','Everyday'].map((value) => <option selected={item.occasion === value}>{value}</option>)}</select></label><label>{tr('透明窗形状', 'Window')}<select name={`catalog.${index}.window`}>{['Heart','Rectangle'].map((value) => <option selected={item.window === value}>{value}</option>)}</select></label><label>{tr('收藏规模', 'Collection size')}<select name={`catalog.${index}.collectionSize`}>{['Small','Medium','Large'].map((value) => <option selected={item.collectionSize === value}>{value}</option>)}</select></label><label class="wide">{tr('项目说明', 'Description')}<textarea name={`catalog.${index}.description`} rows="3">{item.description}</textarea></label><label class="wide">{tr('设计规划备注', 'Planning note')}<textarea name={`catalog.${index}.note`} rows="3">{item.note}</textarea></label></div></fieldset>)}</div></section>
+
+    <section class="save-bar"><a href="/" target="_blank">{tr('预览前台', 'Preview storefront')}</a><button type="submit">{tr('发布设置', 'Publish settings')}</button><span id="save-status" role="status"></span></section>
+  </form>
+
+  <script>
+    const isZh = document.documentElement.lang === 'zh-CN';
+    const form = document.querySelector<HTMLFormElement>('#site-settings');
+    const status = document.querySelector<HTMLElement>('#save-status');
+    form?.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      if (!status) return;
+      status.textContent = isZh ? '正在发布设置...' : 'Publishing...';
+      const data = new FormData(form);
+      const readGroup = (prefix: string) => Object.fromEntries([...data.entries()].filter(([key]) => key.startsWith(`${prefix}.`)).map(([key, value]) => [key.slice(prefix.length + 1), value]));
+      const readGroups = (prefix: string, keys: readonly string[]) => Object.fromEntries(keys.map((key) => [key, readGroup(`${prefix}.${key}`)]));
+      const order = Object.entries(readGroup('order')).sort((a, b) => Number(a[1]) - Number(b[1])).map(([key]) => key);
+      const visible = Object.fromEntries(['browse', 'collection', 'process', 'decision', 'community', 'guides'].map((key) => [key, data.has(`visible.${key}`)]));
+      const sectionKeys = ['browse', 'collection', 'process', 'decision', 'community', 'guides'];
+      const pageKeys = ['collection', 'gallery', 'customize', 'guides'];
+      const catalog = [0, 1, 2].map((index) => readGroup(`catalog.${index}`));
+      const payload = { brand: readGroup('brand'), navigation: readGroup('navigation'), announcement: readGroup('announcement'), routes: readGroup('routes'), pages: readGroups('pages', pageKeys), catalog, hero: readGroup('hero'), theme: readGroup('theme'), footer: readGroup('footer'), seo: { ...readGroup('seo'), indexable: data.has('seo.indexable') }, benefits: String(data.get('benefits') || '').split('\n').map((item) => item.trim()).filter(Boolean), layout: readGroup('layout'), home: { sectionOrder: order, visible, sections: readGroups('sections', sectionKeys) } };
+      try {
+        const response = await fetch('/api/admin/site-settings', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(payload) });
+        const result = await response.json();
+        status.textContent = response.ok ? (isZh ? '发布成功，请刷新前台查看。' : 'Published. Refresh the storefront to review it.') : isZh ? `发布失败。${result.error || ''}` : result.error || 'Publishing failed.';
+      } catch { status.textContent = isZh ? '无法连接服务器。' : 'The server could not be reached.'; }
+    });
+  </script>
+</BaseLayout>
+
+<style>
+  .admin-hero { align-items: end; }
+  .settings { display: grid; gap: 20px; padding-bottom: 100px; }
+  .setting-block { display: grid; grid-template-columns: minmax(190px,.42fr) 1fr; gap: 36px; padding: 28px; }
+  .setting-block h2 { margin: 0; font-size: 1.35rem; }
+  .form-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 18px; }
+  .form-grid .wide { grid-column: 1/-1; }
+  label { display: grid; gap: 7px; color: #55615c; font-size: .78rem; font-weight: 700; text-transform: capitalize; }
+  input, textarea, select { width: 100%; border: 1px solid #ccd4d0; border-radius: 3px; background: white; padding: 10px 11px; color: #17201c; font: inherit; font-weight: 400; text-transform: none; }
+  textarea { resize: vertical; }
+  .color-grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 12px; }
+  .color-control { display: flex; align-items: center; gap: 8px; border: 1px solid #d7ddd9; padding: 5px 8px; }
+  .color-control input { width: 34px; height: 28px; padding: 0; border: 0; }
+  .color-control code { font-size: .72rem; }
+  .compact-grid { margin-top: 22px; grid-template-columns: repeat(3,minmax(0,1fr)); }
+  .section-list { display: grid; }
+  .section-row { display: grid; grid-template-columns: 1fr 100px 110px; gap: 20px; align-items: center; padding: 12px 0; border-bottom: 1px solid #e1e5e2; }
+  .section-row label { display: flex; align-items: center; gap: 7px; }
+  .section-row input[type="checkbox"] { width: 16px; }
+  .module-copy, .catalog-grid { display: grid; gap: 14px; margin-top: 22px; }
+  fieldset { margin: 0; border: 1px solid #d7ddd9; padding: 18px; }
+  legend { padding: 0 7px; font-weight: 800; }
+  .module-copy fieldset { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .module-copy fieldset label:nth-of-type(3) { grid-column: 1 / -1; }
+  .save-bar { position: sticky; bottom: 16px; z-index: 4; display: grid; grid-template-columns: minmax(180px,1fr) auto 1fr; gap: 16px; align-items: center; background: #163f34; color: white; padding: 18px 22px; box-shadow: 0 12px 32px #0003; }
+  .save-bar label { color: white; }
+  .save-bar button { min-height: 40px; border: 0; background: #fff; color: #163f34; padding: 0 18px; font-weight: 800; cursor: pointer; }
+  #save-status { align-self: center; font-size: .85rem; }
+  @media(max-width:760px){.setting-block{grid-template-columns:1fr}.form-grid,.color-grid,.compact-grid,.module-copy fieldset{grid-template-columns:1fr}.module-copy fieldset label:nth-of-type(3){grid-column:auto}.section-row{grid-template-columns:1fr 90px 90px}.save-bar{grid-template-columns:1fr;position:static}}
+</style>

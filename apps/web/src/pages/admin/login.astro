@@ -1,0 +1,44 @@
+---
+import BaseLayout from '@/components/BaseLayout.astro';
+import { adminText, getAdminLocale } from '@/lib/admin-locale';
+const locale = getAdminLocale(Astro.cookies.get('admin_locale')?.value);
+const tr = (chinese: string, english: string) => adminText(locale, chinese, english);
+---
+<BaseLayout title={`${tr('后台登录', 'Admin login')} | Ita SEO OS`} description={tr('安全访问前台、内容和路由管理。', 'Secure access to storefront, content and route management.')}>
+  <main class="login-shell">
+    <form id="login-form" class="login-panel">
+      <p class="kicker">Ita SEO OS</p>
+      <h1>{tr('登录管理后台', 'Sign in to the workspace')}</h1>
+      <p>{tr('管理前台内容、设计项目、页面模块和发布规则。', 'Manage storefront content, concepts, modules and publishing rules.')}</p>
+      <label>{tr('账号', 'Account')}<input id="username" name="username" autocomplete="username" required autofocus /></label>
+      <label>{tr('密码', 'Password')}<input id="password" name="password" type="password" autocomplete="current-password" required /></label>
+      <button type="submit">{tr('登录', 'Sign in')}</button>
+      <p id="login-status" role="status"></p>
+    </form>
+  </main>
+  <script>
+    const isZh = document.documentElement.lang === 'zh-CN';
+    const form = document.querySelector<HTMLFormElement>('#login-form');
+    const status = document.querySelector<HTMLElement>('#login-status');
+    form?.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      if (!status) return;
+      status.textContent = isZh ? '正在登录...' : 'Signing in...';
+      const data = new FormData(form);
+      const response = await fetch('/api/admin/login', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(Object.fromEntries(data)) });
+      const result = await response.json();
+      if (!response.ok) { status.textContent = isZh ? '账号或密码错误，或后台登录尚未配置。' : result.error || 'Sign in failed.'; return; }
+      const next = new URLSearchParams(location.search).get('next');
+      location.href = next?.startsWith('/admin') ? next : '/admin';
+    });
+  </script>
+</BaseLayout>
+<style>
+  .login-shell { min-height: calc(100vh - 160px); display: grid; place-items: center; padding: 48px 16px; }
+  .login-panel { width: min(430px, 100%); background: white; border: 1px solid #d9d5cc; padding: 34px; box-shadow: 0 18px 50px #1b2d2714; }
+  .login-panel h1 { margin: 5px 0 8px; font-size: 2rem; }
+  .login-panel label { display: grid; gap: 7px; margin-top: 18px; font-size: .82rem; font-weight: 700; }
+  .login-panel input { min-height: 44px; border: 1px solid #cbd2ce; padding: 9px 11px; font: inherit; }
+  .login-panel button { width: 100%; min-height: 44px; margin-top: 24px; border: 0; background: #153f34; color: white; font-weight: 800; cursor: pointer; }
+  #login-status { min-height: 24px; color: #be3455; font-size: .85rem; }
+</style>

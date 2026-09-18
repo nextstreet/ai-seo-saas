@@ -1,0 +1,251 @@
+---
+import BaseLayout from '@/components/BaseLayout.astro';
+import { adminText, getAdminLocale } from '@/lib/admin-locale';
+import { getSystemSnapshot } from '@/lib/data';
+
+const snapshot = getSystemSnapshot();
+const locale = getAdminLocale(Astro.cookies.get('admin_locale')?.value);
+const tr = (chinese: string, english: string) => adminText(locale, chinese, english);
+const statusLabels = locale === 'zh'
+  ? { idea: '想法', candidate: '候选', approved: '已批准', draft: '草稿', review: '审核中', published: '已发布', refresh: '待更新', archived: '已归档' }
+  : { idea: 'Idea', candidate: 'Candidate', approved: 'Approved', draft: 'Draft', review: 'Review', published: 'Published', refresh: 'Refresh', archived: 'Archived' };
+---
+
+<BaseLayout title={`${tr('内容管理', 'CMS Console')} | Ita SEO OS`} description={tr('管理候选内容、质量门槛、主题图谱和发布准备状态。', 'Manage candidate content, quality gates, topic graph, and publish readiness.')}>
+  <section class="shell hero" style="grid-template-columns: 1fr;">
+    <div>
+      <h1>{tr('内容管理中心', 'CMS Console')}</h1>
+      <p class="lede">{tr('围绕 Custom Ita Bag 验证站管理候选内容。候选主题可以规模化扩展，但发布前仍须确认意图区分度、原创资产和用户决策价值。', 'Candidate-first content management for the Custom Ita Bag validation site. Candidates can scale, but publishing still requires intent difference, assets, and buyer value.')}</p>
+      <p><a class="button" href="/admin/site">{tr('管理前台设置', 'Manage storefront settings')}</a></p>
+    </div>
+  </section>
+
+  <section class="shell split band">
+    <aside class="sidebar">
+      <div class="card">
+        <h3>{tr('当前租户', 'Tenant')}</h3>
+        <p>{snapshot.tenant.name}</p>
+        <div class="pillrow">
+          <span class="pill">{snapshot.topics.length} {tr('个主题', 'topics')}</span>
+          <span class="pill">{snapshot.entities.length} {tr('个实体', 'entities')}</span>
+          <span class="pill">{snapshot.products.length} {tr('个产品', 'products')}</span>
+          <span class="pill">{snapshot.designs.length} {tr('个设计', 'designs')}</span>
+          <span class="pill">{snapshot.materials.length} {tr('种材料', 'materials')}</span>
+          <span class="pill">{snapshot.intents.length} {tr('类意图', 'intents')}</span>
+        </div>
+      </div>
+    </aside>
+
+    <div>
+      <div class="console-head">
+        <div><h2>{tr('候选内容', 'Candidate Content')}</h2><p class="meta">{tr('页面进入下一阶段前，先编辑搜索意图、SEO 元数据和质量门槛。', 'Edit intent, metadata and quality gates before advancing a page.')}</p></div>
+        <div class="console-tools"><label>{tr('筛选', 'Filter')}<select id="candidate-filter"><option value="">{tr('全部状态', 'All statuses')}</option>{Object.entries(statusLabels).map(([value, label]) => <option value={value}>{label}</option>)}</select></label><button id="refresh-candidates" class="button" type="button">{tr('刷新', 'Refresh')}</button></div>
+      </div>
+      <p id="candidate-status" class="meta" role="status">{tr('正在加载候选队列...', 'Loading candidate queue...')}</p>
+      <table>
+        <thead>
+          <tr>
+            <th>{tr('候选页面', 'Candidate')}</th>
+            <th>{tr('页面类型', 'Type')}</th>
+            <th>{tr('评分', 'Scores')}</th>
+            <th>{tr('质量门槛', 'Gate')}</th>
+            <th><span class="sr-only">{tr('操作', 'Actions')}</span></th>
+          </tr>
+        </thead>
+        <tbody id="candidate-rows"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <dialog id="candidate-dialog">
+    <form id="candidate-form" method="dialog">
+      <header><div><p class="kicker">{tr('编辑工作流', 'Editorial workflow')}</p><h2>{tr('编辑候选内容', 'Edit candidate')}</h2></div><button class="icon-button" value="cancel" aria-label={tr('关闭编辑器', 'Close editor')} title={tr('关闭编辑器', 'Close editor')}>&times;</button></header>
+      <input type="hidden" name="id" />
+      <div class="editor-grid">
+        <label class="wide">{tr('页面标题', 'Title')}<input name="title" required maxlength="160" /></label>
+        <label>Slug<input name="slug" required pattern="[a-z0-9]+(?:-[a-z0-9]+)*" /></label>
+        <label>{tr('页面类型', 'Page type')}<select name="pageType"><option value="product">{tr('产品页', 'Product')}</option><option value="design_inspiration">{tr('设计灵感', 'Design inspiration')}</option><option value="material_guide">{tr('材料指南', 'Material guide')}</option><option value="intent_guide">{tr('意图指南', 'Intent guide')}</option><option value="comparison">{tr('对比页', 'Comparison')}</option><option value="gallery">{tr('图库', 'Gallery')}</option><option value="community_topic">{tr('社区主题', 'Community topic')}</option></select></label>
+        <label class="wide">{tr('核心关键词', 'Primary keyword')}<input name="primaryKeyword" required /></label>
+        <label class="wide">Meta Description<textarea name="metaDescription" rows="2" required maxlength="320"></textarea></label>
+        <label class="wide">{tr('搜索意图摘要', 'Intent summary')}<textarea name="intentSummary" rows="3" required maxlength="500"></textarea></label>
+        <label class="wide">{tr('内容大纲，每行一个章节', 'Outline, one section per line')}<textarea name="outline" rows="5"></textarea></label>
+        <label>{tr('机会评分', 'Opportunity score')}<input name="opportunityScore" type="number" min="0" max="100" required /></label>
+        <label>{tr('当前状态', 'Status')}<select name="status" id="candidate-status-select"></select></label>
+      </div>
+      <fieldset><legend>{tr('质量门槛', 'Quality gate')}</legend><div class="score-grid"><label>{tr('意图区分度', 'Intent difference')}<input name="intentDifference" type="number" min="0" max="100" required /></label><label>{tr('内容独特性', 'Uniqueness')}<input name="uniqueness" type="number" min="0" max="100" required /></label><label>{tr('素材准备度', 'Asset readiness')}<input name="assetReadiness" type="number" min="0" max="100" required /></label><label>{tr('关键词冲突风险', 'Cannibalization risk')}<input name="cannibalizationRisk" type="number" min="0" max="100" required /></label><label>{tr('用户决策价值', 'Buyer value')}<input name="buyerValue" type="number" min="0" max="100" required /></label></div><label class="gate-notes">{tr('审核备注，每行一条', 'Review notes, one per line')}<textarea name="notes" rows="3"></textarea></label></fieldset>
+      <label class="transition-reason">{tr('状态变更原因', 'Transition reason')}<textarea name="reason" rows="2" placeholder={tr('变更状态时必须填写', 'Required when moving to a new status')}></textarea></label>
+      <p id="editor-status" class="meta" role="status"></p>
+      <footer><button value="cancel" class="button" type="button" id="cancel-editor">{tr('取消', 'Cancel')}</button><button class="button primary" type="submit">{tr('保存候选内容', 'Save candidate')}</button></footer>
+    </form>
+  </dialog>
+</BaseLayout>
+
+<script>
+  const isZh = document.documentElement.lang === 'zh-CN';
+  const ui = isZh ? {
+    opportunity: '机会', quality: '质量', passed: '已通过', needsWork: '需完善', awaiting: '等待审核。', edit: '编辑', createDraft: '创建草稿', managePage: '管理页面', draftReason: '已通过质量门槛，创建编辑草稿。',
+    shown: (shown: number, total: number) => `显示 ${shown} 条，共 ${total} 条候选内容。`, current: (status: string) => `当前状态：${status}。保存时将重新计算质量分。`,
+    loading: '正在加载候选队列...', loadError: '无法加载候选内容。', serverError: '无法连接服务器。', saving: '正在保存候选内容...', saveError: '无法保存候选内容。'
+  } : {
+    opportunity: 'opportunity', quality: 'quality', passed: 'passed', needsWork: 'needs work', awaiting: 'Awaiting review.', edit: 'Edit', createDraft: 'Create draft', managePage: 'Manage page', draftReason: 'Quality gate passed; create editorial draft.',
+    shown: (shown: number, total: number) => `${shown} of ${total} candidates shown.`, current: (status: string) => `Current status: ${status}. Quality score is recalculated on save.`,
+    loading: 'Loading candidate queue...', loadError: 'Unable to load candidates.', serverError: 'The server could not be reached.', saving: 'Saving candidate...', saveError: 'Unable to save candidate.'
+  };
+  const statusLabels: Record<string, string> = isZh
+    ? { idea: '想法', candidate: '候选', approved: '已批准', draft: '草稿', review: '审核中', published: '已发布', refresh: '待更新', archived: '已归档' }
+    : { idea: 'Idea', candidate: 'Candidate', approved: 'Approved', draft: 'Draft', review: 'Review', published: 'Published', refresh: 'Refresh', archived: 'Archived' };
+  const pageTypeLabels: Record<string, string> = isZh
+    ? { product: '产品页', design_inspiration: '设计灵感', material_guide: '材料指南', intent_guide: '意图指南', comparison: '对比页', gallery: '图库', community_topic: '社区主题' }
+    : {};
+  const refresh = document.querySelector<HTMLButtonElement>('#refresh-candidates');
+  const rows = document.querySelector<HTMLTableSectionElement>('#candidate-rows');
+  const status = document.querySelector<HTMLElement>('#candidate-status');
+  const filter = document.querySelector<HTMLSelectElement>('#candidate-filter');
+  const dialog = document.querySelector<HTMLDialogElement>('#candidate-dialog');
+  const form = document.querySelector<HTMLFormElement>('#candidate-form');
+  const editorStatus = document.querySelector<HTMLElement>('#editor-status');
+  const statusSelect = document.querySelector<HTMLSelectElement>('#candidate-status-select');
+  let queue: any[] = [];
+
+  const transitions: Record<string, string[]> = { idea: ['candidate', 'archived'], candidate: ['approved', 'archived'], approved: ['archived'], draft: [], review: [], published: [], refresh: [], archived: [] };
+
+  const element = (tag: string, text: string, className = '') => {
+    const node = document.createElement(tag);
+    node.textContent = text;
+    if (className) node.className = className;
+    return node;
+  };
+
+  function renderCandidates() {
+    if (!rows || !status) return;
+    rows.replaceChildren();
+    const candidates = queue.filter((candidate) => !filter?.value || candidate.status === filter.value);
+    for (const candidate of candidates) {
+      const row = document.createElement('tr');
+      const identity = document.createElement('td');
+      identity.append(element('strong', candidate.title), element('div', candidate.primaryKeyword, 'meta'), element('div', `/content/${candidate.slug}`, 'meta'));
+      const type = element('td', pageTypeLabels[candidate.pageType] || String(candidate.pageType).replaceAll('_', ' '));
+      const scores = document.createElement('td');
+      const opportunity = document.createElement('div');
+      opportunity.append(element('span', String(candidate.opportunityScore), 'score'), ` ${ui.opportunity}`);
+      const quality = document.createElement('div');
+      quality.append(element('span', String(candidate.qualityScore), 'score'), ` ${ui.quality}`);
+      scores.append(opportunity, quality);
+      const gate = document.createElement('td');
+      gate.append(element('span', statusLabels[candidate.status] || candidate.status, 'pill'), ' ', element('span', candidate.qualityGate?.passed ? ui.passed : ui.needsWork, `pill ${candidate.qualityGate?.passed ? 'pass' : ''}`), element('p', candidate.qualityGate?.notes?.[0] || ui.awaiting, 'meta'));
+      const action = document.createElement('td');
+      const edit = element('button', ui.edit, 'button') as HTMLButtonElement;
+      edit.type = 'button'; edit.addEventListener('click', () => openEditor(candidate)); action.append(edit);
+      if (candidate.status === 'approved' && candidate.qualityGate?.passed) {
+        const draft = element('button', ui.createDraft, 'button primary') as HTMLButtonElement;
+        draft.type = 'button'; draft.addEventListener('click', () => createDraft(candidate, draft)); action.append(' ', draft);
+      } else if (candidate.pageId) {
+        const page = element('a', ui.managePage, 'button') as HTMLAnchorElement;
+        page.href = `/admin/pages/${candidate.pageId}`; action.append(' ', page);
+      }
+      row.append(identity, type, scores, gate, action);
+      rows.append(row);
+    }
+    status.textContent = ui.shown(candidates.length, queue.length);
+  }
+
+  async function createDraft(candidate: any, button: HTMLButtonElement) {
+    button.disabled = true;
+    try {
+      const response = await fetch(`/api/admin/candidates/${candidate.id}/draft`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ reason: ui.draftReason }) });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error);
+      window.location.href = `/admin/pages/${result.pageId}`;
+    } catch (error) {
+      if (status) status.textContent = (error as Error).message;
+      button.disabled = false;
+    }
+  }
+
+  function setField(name: string, value: unknown) {
+    const field = form?.elements.namedItem(name) as HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement | null;
+    if (field) field.value = String(value ?? '');
+  }
+
+  function openEditor(candidate: any) {
+    if (!dialog || !form || !statusSelect) return;
+    for (const key of ['id', 'title', 'slug', 'pageType', 'primaryKeyword', 'metaDescription', 'intentSummary', 'opportunityScore']) setField(key, candidate[key]);
+    setField('outline', candidate.outline.join('\n'));
+    for (const key of ['intentDifference', 'uniqueness', 'assetReadiness', 'cannibalizationRisk', 'buyerValue']) setField(key, candidate.qualityGate[key]);
+    setField('notes', (candidate.qualityGate.notes || []).join('\n'));
+    statusSelect.replaceChildren();
+    for (const value of [candidate.status, ...(transitions[candidate.status] || [])]) statusSelect.add(new Option(statusLabels[value] || value, value));
+    setField('reason', '');
+    if (editorStatus) editorStatus.textContent = ui.current(statusLabels[candidate.status] || candidate.status);
+    dialog.showModal();
+  }
+
+  async function loadCandidates() {
+    if (!rows || !status) return;
+    status.textContent = ui.loading;
+    rows.replaceChildren();
+
+    try {
+      const response = await fetch('/api/admin/candidates');
+      const result = await response.json();
+      if (!response.ok) {
+        status.textContent = isZh ? `${ui.loadError}${result.error ? ` ${result.error}` : ''}` : result.error || ui.loadError;
+        return;
+      }
+
+      queue = [...result.candidates].sort((left, right) =>
+        right.opportunityScore + right.qualityScore - (left.opportunityScore + left.qualityScore)
+      );
+      renderCandidates();
+    } catch {
+      status.textContent = ui.serverError;
+    }
+  }
+  form?.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    if (!form || !editorStatus) return;
+    const data = new FormData(form);
+    const gate = { ...Object.fromEntries(['intentDifference', 'uniqueness', 'assetReadiness', 'cannibalizationRisk', 'buyerValue'].map((key) => [key, Number(data.get(key))])), notes: String(data.get('notes') || '').split('\n').map((item) => item.trim()).filter(Boolean) };
+    const payload = Object.fromEntries(['title', 'slug', 'pageType', 'primaryKeyword', 'metaDescription', 'intentSummary', 'status', 'reason'].map((key) => [key, data.get(key)]));
+    Object.assign(payload, { outline: String(data.get('outline') || '').split('\n').map((item) => item.trim()).filter(Boolean), opportunityScore: Number(data.get('opportunityScore')), qualityGate: gate });
+    editorStatus.textContent = ui.saving;
+    try {
+      const response = await fetch(`/api/admin/candidates/${data.get('id')}`, { method: 'PATCH', headers: { 'content-type': 'application/json' }, body: JSON.stringify(payload) });
+      const result = await response.json();
+      if (!response.ok) { editorStatus.textContent = isZh ? `${ui.saveError}${result.error ? ` ${result.error}` : ''}` : result.error || ui.saveError; return; }
+      dialog?.close(); await loadCandidates();
+    } catch { editorStatus.textContent = ui.serverError; }
+  });
+  filter?.addEventListener('change', renderCandidates);
+  document.querySelector('#cancel-editor')?.addEventListener('click', () => dialog?.close());
+  refresh?.addEventListener('click', loadCandidates);
+  loadCandidates();
+</script>
+
+<style>
+  .console-head { display: flex; justify-content: space-between; align-items: end; gap: 24px; margin-bottom: 14px; }
+  .console-head h2 { margin-bottom: 4px; }
+  .console-tools { display: flex; align-items: end; gap: 10px; }
+  .console-tools label { display: grid; gap: 4px; font-size: 12px; color: var(--muted); }
+  .console-tools select { min-height: 38px; border: 1px solid var(--line); background: white; padding: 0 10px; }
+  #candidate-status { margin-bottom: 14px; }
+  .pill.pass { color: var(--accent-dark); border-color: #8bbbae; background: #eff8f4; }
+  dialog { width: min(760px, calc(100% - 28px)); max-height: calc(100vh - 40px); border: 1px solid var(--line); border-radius: 8px; padding: 0; box-shadow: 0 24px 80px #0004; }
+  dialog::backdrop { background: #17201c99; }
+  #candidate-form { padding: 24px; overflow: auto; }
+  #candidate-form header, #candidate-form footer { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+  #candidate-form header { margin-bottom: 22px; }
+  #candidate-form footer { justify-content: flex-end; margin-top: 20px; }
+  .icon-button { width: 36px; height: 36px; border: 1px solid var(--line); background: white; font-size: 24px; cursor: pointer; }
+  .editor-grid, .score-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+  .score-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+  #candidate-form label { display: grid; gap: 6px; color: var(--muted); font-size: 12px; font-weight: 700; }
+  #candidate-form input, #candidate-form textarea, #candidate-form select { width: 100%; border: 1px solid var(--line); padding: 9px 10px; font: inherit; }
+  #candidate-form .wide { grid-column: 1 / -1; }
+  #candidate-form fieldset { margin: 20px 0 0; border: 1px solid var(--line); padding: 14px; }
+  #candidate-form legend { padding: 0 6px; font-weight: 800; }
+  .gate-notes { margin-top: 14px; }
+  .transition-reason { margin-top: 16px; }
+  .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+  @media(max-width: 760px) { .console-head, .editor-grid, .score-grid { display: grid; grid-template-columns: 1fr; } #candidate-form .wide { grid-column: auto; } table { display: block; overflow-x: auto; } }
+</style>

@@ -1,0 +1,41 @@
+---
+import StoreLayout from '@/components/StoreLayout.astro';
+import { getPublishedContent } from '@/lib/data';
+import { getSiteConfig } from '@/lib/site-config';
+
+const [page, config] = await Promise.all([getPublishedContent(Astro.params.slug || ''), getSiteConfig()]);
+if (!page) return Astro.redirect('/404', 302);
+---
+
+<StoreLayout title={page.title} description={page.metaDescription} config={config}>
+  <article class="article">
+    <a class="small" href={config.routes.guides}>Field notes / {page.primaryKeyword}</a>
+    <h1 style="margin-top: 16px;">{page.title}</h1>
+    <p class="lede">{page.heroSummary}</p>
+    <a href={config.routes.collection}><img src="/images/campaign.webp" alt="Pink and mint ita bag display concepts" width="1536" height="1024" /></a>
+    <p class="small">AI concept imagery</p>
+
+    {page.body.map((section) => (
+      <section class="band">
+        <h2>{section.heading}</h2>
+        {section.paragraphs.map((paragraph) => <p>{paragraph}</p>)}
+        {section.bullets && (
+          <ul>
+            {section.bullets.map((bullet) => <li>{bullet}</li>)}
+          </ul>
+        )}
+      </section>
+    ))}
+
+    <section class="band">
+      <h2>Related Pages</h2>
+      <div class="actions">
+        {page.internalLinks.map((link) => <a class="button" href={`/content/${link.slug}`}>{link.label}</a>)}
+      </div>
+    </section>
+    <div class="actions">
+      <a class="button" href={config.routes.customize}>Plan your own bag</a>
+      <a class="button light" href={config.routes.gallery}>Explore design ideas</a>
+    </div>
+  </article>
+</StoreLayout>
