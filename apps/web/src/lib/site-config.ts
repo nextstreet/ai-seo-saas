@@ -59,66 +59,114 @@ export const defaultSiteConfig: SiteConfig = {
   pages: {
     collection: { eyebrow: 'The concept collection', title: 'Find your kind of carry.', description: 'Start with the things you collect, the way you plan to carry them or simply a color direction you love.' },
     gallery: { eyebrow: 'Community design studio', title: 'Which idea should move forward?', description: 'Save the directions that fit you and vote for the concepts you want to see developed further.' },
-    customize: { eyebrow: 'Custom planning studio', title: 'Turn a favorite collection into a clear …8437 tokens truncated…definitionField.field)) {
-      await request(`/fields/${definition.name}`, { method: 'POST', body: JSON.stringify(definitionField) });
-    }
+    customize: { eyebrow: 'Custom planning studio', title: 'Turn a favorite collection into a clear brief.', description: 'Choose what you carry and how you use it. The preview translates those choices into practical points to discuss with a maker.' },
+    guides: { eyebrow: 'Field notes', title: 'Ideas are better with useful details.', description: 'Explore bag types, display arrangements and practical questions before turning a visual direction into a brief.' }
+  },
+  routes: { collection: '/collection', gallery: '/gallery', customize: '/customize', guides: '/guides' },
+  catalog: defaultCollection,
+  footer: { eyebrow: 'A collection can begin with one idea', title: 'Bring yours into focus.' }
+};
+
+const textValue = (value: unknown, fallback: string, max = 180) => typeof value === 'string' && value.trim() ? value.trim().slice(0, max) : fallback;
+const colorValue = (value: unknown, fallback: string) => typeof value === 'string' && /^#[0-9a-f]{6}$/i.test(value) ? value : fallback;
+const numberValue = (value: unknown, fallback: number, min: number, max: number) => Math.min(max, Math.max(min, Number(value) || fallback));
+const enumValue = <T extends string>(value: unknown, fallback: T, allowed: readonly T[]) => allowed.includes(value as T) ? value as T : fallback;
+
+export function routeValue(value: unknown, fallback: string) {
+  if (typeof value !== 'string') return fallback;
+  const path = value.trim().replace(/\/$/, '') || '/';
+  if (!/^\/[a-z0-9]+(?:[/-][a-z0-9]+)*$/.test(path)) return fallback;
+  if (/^\/(admin|api|content|designs)(\/|$)/.test(path)) return fallback;
+  return path;
+}
+
+export function normalizeSiteConfig(input: unknown): SiteConfig {
+  const raw = input && typeof input === 'object' ? input as Record<string, any> : {};
+  const order = Array.isArray(raw.home?.sectionOrder) ? raw.home.sectionOrder.filter((key: unknown): key is HomeSectionKey => homeSectionKeys.includes(key as HomeSectionKey)) : [];
+  const sectionOrder = [...new Set([...order, ...homeSectionKeys])];
+  const routes = Object.fromEntries(routeKeys.map((key) => [key, routeValue(raw.routes?.[key], defaultSiteConfig.routes[key])])) as Record<RouteKey, string>;
+  const seenRoutes = new Set<string>();
+  for (const key of routeKeys) {
+    if (seenRoutes.has(routes[key])) routes[key] = defaultSiteConfig.routes[key];
+    seenRoutes.add(routes[key]);
   }
+  const rawCatalog = Array.isArray(raw.catalog) && raw.catalog.length ? raw.catalog : defaultCollection;
+  const catalog = rawCatalog.map((rawItem, index) => {
+    const fallback = defaultCollection[index] || defaultCollection[0]!;
+    const item = rawItem && typeof rawItem === 'object' ? rawItem : {};
+    return {
+      ...fallback,
+      slug: routeValue(`/${item.slug || fallback.slug}`, `/${fallback.slug}`).slice(1),
+      name: textValue(item.name, fallback.name, 80),
+      type: enumValue(item.type, fallback.type, ['Backpack', 'Crossbody', 'Tote']),
+      color: textValue(item.color, fallback.color, 60),
+      swatch: colorValue(item.swatch, fallback.swatch),
+      image: textValue(item.image, fallback.image, 300),
+      display: enumValue(item.display, fallback.display, ['Pins', 'Photocards']),
+      mood: enumValue(item.mood, fallback.mood, ['Playful', 'Soft', 'Minimal']),
+      occasion: enumValue(item.occasion, fallback.occasion, ['Conventions', 'Everyday']),
+      window: enumValue(item.window, fallback.window, ['Heart', 'Rectangle']),
+      collectionSize: enumValue(item.collectionSize, fallback.collectionSize, ['Small', 'Medium', 'Large']),
+      description: textValue(item.description, fallback.description, 320),
+      note: textValue(item.note, fallback.note, 320),
+      highlights: Array.isArray(item.highlights)
+        ? item.highlights.slice(0, 8).map((highlight: any) => ({
+            title: textValue(highlight?.title, '', 100),
+            text: textValue(highlight?.text, '', 320),
+          })).filter((highlight: { title: string; text: string }) => highlight.title && highlight.text)
+        : fallback.highlights,
+      planningPoints: Array.isArray(item.planningPoints)
+        ? item.planningPoints.map((point: unknown) => textValue(point, '', 180)).filter(Boolean).slice(0, 12)
+        : fallback.planningPoints
+    };
+  });
+  return {
+    brand: {
+      name: textValue(raw.brand?.name, defaultSiteConfig.brand.name, 30),
+      suffix: textValue(raw.brand?.suffix, defaultSiteConfig.brand.suffix, 30),
+      tagline: textValue(raw.brand?.tagline, defaultSiteConfig.brand.tagline, 220)
+    },
+    navigation: Object.fromEntries(Object.entries(defaultSiteConfig.navigation).map(([key, fallback]) => [key, textValue(raw.navigation?.[key], fallback, 40)])) as SiteConfig['navigation'],
+    announcement: Object.fromEntries(Object.entries(defaultSiteConfig.announcement).map(([key, fallback]) => [key, textValue(raw.announcement?.[key], fallback, 100)])) as SiteConfig['announcement'],
+    hero: {
+      eyebrow: textValue(raw.hero?.eyebrow, defaultSiteConfig.hero.eyebrow, 80), title: textValue(raw.hero?.title, defaultSiteConfig.hero.title, 100),
+      description: textValue(raw.hero?.description, defaultSiteConfig.hero.description, 260), image: textValue(raw.hero?.image, defaultSiteConfig.hero.image, 300),
+      primaryLabel: textValue(raw.hero?.primaryLabel, defaultSiteConfig.hero.primaryLabel, 50), primaryHref: raw.hero?.primaryHref === defaultSiteConfig.hero.primaryHref ? routes.collection : textValue(raw.hero?.primaryHref, routes.collection, 200),
+      secondaryLabel: textValue(raw.hero?.secondaryLabel, defaultSiteConfig.hero.secondaryLabel, 50), secondaryHref: raw.hero?.secondaryHref === defaultSiteConfig.hero.secondaryHref ? routes.customize : textValue(raw.hero?.secondaryHref, routes.customize, 200)
+    },
+    benefits: Array.isArray(raw.benefits) ? raw.benefits.map((item: unknown) => textValue(item, '', 80)).filter(Boolean).slice(0, 6) : defaultSiteConfig.benefits,
+    seo: { indexable: raw.seo?.indexable === true, ogImage: textValue(raw.seo?.ogImage, defaultSiteConfig.seo.ogImage, 300) },
+    theme: Object.fromEntries(Object.entries(defaultSiteConfig.theme).map(([key, fallback]) => [key, colorValue(raw.theme?.[key], fallback)])) as SiteConfig['theme'],
+    layout: {
+      contentMax: numberValue(raw.layout?.contentMax, defaultSiteConfig.layout.contentMax, 960, 1600),
+      sectionSpacing: numberValue(raw.layout?.sectionSpacing, defaultSiteConfig.layout.sectionSpacing, 48, 120),
+      cardColumns: numberValue(raw.layout?.cardColumns, defaultSiteConfig.layout.cardColumns, 2, 4) as 2 | 3 | 4
+    },
+    home: {
+      sectionOrder,
+      visible: Object.fromEntries(homeSectionKeys.map((key) => [key, raw.home?.visible?.[key] !== false])) as Record<HomeSectionKey, boolean>,
+      sections: Object.fromEntries(homeSectionKeys.map((key) => [key, Object.fromEntries(Object.entries(defaultSiteConfig.home.sections[key]).map(([field, fallback]) => [field, textValue(raw.home?.sections?.[key]?.[field], fallback, field === 'description' ? 320 : 100)]))])) as Record<HomeSectionKey, SectionCopy>
+    },
+    pages: Object.fromEntries(routeKeys.map((key) => [key, Object.fromEntries(Object.entries(defaultSiteConfig.pages[key]).map(([field, fallback]) => [field, textValue(raw.pages?.[key]?.[field], fallback, field === 'description' ? 320 : 120)]))])) as Record<RouteKey, PageIntro>,
+    routes,
+    catalog,
+    footer: { eyebrow: textValue(raw.footer?.eyebrow, defaultSiteConfig.footer.eyebrow, 90), title: textValue(raw.footer?.title, defaultSiteConfig.footer.title, 100) }
+  };
 }
 
-const relations = [
-  ['cms_categories', 'tenant_id', 'cms_tenants'], ['cms_materials', 'tenant_id', 'cms_tenants'],
-  ['cms_products', 'tenant_id', 'cms_tenants'], ['cms_products', 'category_id', 'cms_categories'], ['cms_pages', 'tenant_id', 'cms_tenants'],
-  ['cms_site_settings', 'tenant_id', 'cms_tenants'], ['cms_keyword_targets', 'tenant_id', 'cms_tenants'],
-  ['cms_menus', 'tenant_id', 'cms_tenants'], ['cms_social_campaigns', 'tenant_id', 'cms_tenants'], ['cms_social_posts', 'tenant_id', 'cms_tenants'], ['cms_inquiries', 'tenant_id', 'cms_tenants'],
-  ['cms_categories', 'parent_id', 'cms_categories'], ['cms_category_translations', 'category_id', 'cms_categories'], ['cms_material_translations', 'material_id', 'cms_materials'],
-  ['cms_product_translations', 'product_id', 'cms_products'], ['cms_page_translations', 'page_id', 'cms_pages'],
-  ['cms_product_materials', 'product_id', 'cms_products'], ['cms_product_materials', 'material_id', 'cms_materials'],
-  ['cms_content_blocks', 'page_id', 'cms_pages'], ['cms_content_block_translations', 'content_block_id', 'cms_content_blocks'],
-  ['cms_site_settings_translations', 'site_settings_id', 'cms_site_settings'],
-  ['cms_menu_items', 'menu_id', 'cms_menus'], ['cms_menu_items', 'parent_id', 'cms_menu_items'], ['cms_menu_item_translations', 'menu_item_id', 'cms_menu_items'],
-  ['cms_social_posts', 'campaign_id', 'cms_social_campaigns'], ['cms_inquiries', 'product_id', 'cms_products'],
-];
-const existingRelations = new Set((await request('/relations')).data.map((item) => `${item.collection}.${item.field}`));
-for (const [collection, relationField, relatedCollection] of relations) {
-  if (!existingRelations.has(`${collection}.${relationField}`)) {
-    await request('/relations', { method: 'POST', body: JSON.stringify({ collection, field: relationField, related_collection: relatedCollection, schema: { on_delete: 'CASCADE' } }) });
+export async function getSiteConfig(locale = import.meta.env.PUBLIC_DEFAULT_LOCALE || 'en-US'): Promise<SiteConfig> {
+  const directus = await getDirectusSitePayload(locale);
+  if (directus) {
+    return normalizeSiteConfig({
+      ...directus.config,
+      catalog: directus.catalog.length ? directus.catalog : undefined,
+    });
   }
-}
-
-async function findOne(collection, filter) {
-  const result = await request(`/items/${collection}?filter=${encodeURIComponent(JSON.stringify(filter))}&limit=1`);
-  return result.data[0];
-}
-async function create(collection, data) {
-  return (await request(`/items/${collection}`, { method: 'POST', body: JSON.stringify(data) })).data;
-}
-
-let tenant = await findOne('cms_tenants', { slug: { _eq: 'ita-bag-lab' } });
-if (!tenant) tenant = await create('cms_tenants', { slug: 'ita-bag-lab', name: 'Ita Bag Design Lab', primary_locale: 'en-US', available_locales: ['en-US', 'zh-CN'], status: 'active' });
-
-let settings = await findOne('cms_site_settings', { tenant_id: { _eq: tenant.id } });
-if (!settings) settings = await create('cms_site_settings', { tenant_id: tenant.id, status: 'published', base_config: { seo: { indexable: false }, brand: { name: 'ITA', suffix: 'ATELIER' } } });
-for (const translation of [
-  { languages_code: 'en-US', config: { brand: { name: 'ITA', suffix: 'ATELIER', tagline: 'Custom ita bag concepts shaped around the things people collect.' } } },
-  { languages_code: 'zh-CN', config: { brand: { name: 'ITA', suffix: 'ATELIER', tagline: '围绕你的收藏，设计专属痛包。' }, navigation: { bags: '痛包系列', create: '开始设计', studio: '设计工坊', guides: '选购指南', cta: '定制痛包' } } },
-]) {
-  const found = await findOne('cms_site_settings_translations', { site_settings_id: { _eq: settings.id }, languages_code: { _eq: translation.languages_code } });
-  if (!found) await create('cms_site_settings_translations', { site_settings_id: settings.id, ...translation });
-}
-
-const seedProducts = [
-  { key: 'sweetheart', sort: 10, facts: { product_type: 'Backpack', color: 'Blush pink', swatch: '#eaa8bc', image_url: '/images/heart.webp', display_type: 'Pins', mood: 'Playful', occasion: 'Conventions', window_shape: 'Heart', collection_size: 'Large' }, en: { name: 'The Sweetheart', description: 'A heart-shaped frame for the little things you love.', note: 'Start with one focal pin and leave breathing room around the edge.', primary_keyword: 'heart ita backpack' }, zh: { name: '甜心痛包', description: '心形展示窗，为喜爱的徽章与纪念物留出主角位置。', note: '先确定一枚主徽章，再围绕它安排较小配件。', primary_keyword: '心形痛包' } },
-  { key: 'mint-story', sort: 20, facts: { product_type: 'Crossbody', color: 'Mint green', swatch: '#abcbbd', image_url: '/images/mint.webp', display_type: 'Photocards', mood: 'Soft', occasion: 'Everyday', window_shape: 'Rectangle', collection_size: 'Small' }, en: { name: 'Mint Story', description: 'A fresh mint palette and a clean window for favorite photocards.', note: 'Use protective sleeves and confirm usable window dimensions.', primary_keyword: 'photocard ita crossbody bag' }, zh: { name: '薄荷故事', description: '清新的薄荷色与简洁展示窗，适合随身携带喜爱的拍立得卡。', note: '使用保护套，并提前确认展示窗的可用尺寸。', primary_keyword: '拍立得卡痛包' } },
-  { key: 'after-hours', sort: 30, facts: { product_type: 'Tote', color: 'Black', swatch: '#25282b', image_url: '/images/noir.webp', display_type: 'Pins', mood: 'Minimal', occasion: 'Everyday', window_shape: 'Rectangle', collection_size: 'Medium' }, en: { name: 'After Hours', description: 'A quieter black canvas for a collection with personality.', note: 'Repeat one metal finish and use a dark insert for contrast.', primary_keyword: 'black ita tote bag' }, zh: { name: '午夜之后', description: '低调的黑色画布，让收藏细节成为视觉焦点。', note: '统一五金颜色，并用深色内衬衬托金属细节。', primary_keyword: '黑色痛包托特包' } },
-];
-for (const seed of seedProducts) {
-  let product = await findOne('cms_product_translations', { slug: { _eq: seed.key }, languages_code: { _eq: 'en-US' } });
-  let productId = product?.product_id;
-  if (!productId) productId = (await create('cms_products', { tenant_id: tenant.id, status: 'published', sort: seed.sort, ...seed.facts })).id;
-  for (const [languages_code, copy] of [['en-US', seed.en], ['zh-CN', seed.zh]]) {
-    const found = await findOne('cms_product_translations', { product_id: { _eq: productId }, languages_code: { _eq: languages_code } });
-    if (!found) await create('cms_product_translations', { product_id: productId, languages_code, slug: seed.key, search_intent: 'commercial_inspiration', highlights: [], planning_points: [], ...copy });
+  if (!supabase) {
+    const local = await readLocalSiteConfig();
+    return local ? normalizeSiteConfig(local) : defaultSiteConfig;
   }
+  const slug = import.meta.env.PUBLIC_TENANT_SLUG || 'ita-bag-lab';
+  const { data } = await supabase.from('site_settings').select('config').eq('tenant_slug', slug).eq('is_active', true).maybeSingle();
+  return data?.config ? normalizeSiteConfig(data.config) : defaultSiteConfig;
 }
-
-console.log(`Directus V1 schema and starter content are ready at ${baseUrl}`);
