@@ -62,3 +62,27 @@ content is not modeled only as an article rewrite.
 Product types, materials, features, components, and applications begin as topic
 nodes. This avoids parallel taxonomies before subtype-specific fields exist.
 Dedicated tables may be introduced later without changing their graph identity.
+
+## ADR-009 — Directus owns editorial content
+
+**Status:** accepted
+
+Use Directus as the editorial source of truth for products, translations,
+pages, reusable page blocks, media metadata, keyword placement, and social
+content drafts. Keep Directus on a database separate from the existing
+Supabase operational schema; the latter relies on tenant RLS, RPCs, and
+composite constraints that should not be adopted as a Directus-managed schema.
+
+Astro reads Directus on the server with a read-only token. AI and n8n may create
+suggestions or drafts through dedicated service users, but they must not publish
+without the existing review gate.
+
+## ADR-010 — Localized fields use translation collections
+
+**Status:** accepted
+
+Keep language-neutral product facts on base records and localized slugs, copy,
+SEO metadata, and component content in translation collections. The initial
+locales are `en-US` and `zh-CN`; missing translations fall back to `en-US`.
+Locale-specific keyword targets remain separate to prevent cross-language
+cannibalization decisions.

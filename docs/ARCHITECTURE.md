@@ -9,7 +9,8 @@ flowchart TD
   SEO --> Candidate[Content candidate]
   Candidate --> Content[Content engine]
   Content --> Review[Human review]
-  Review --> Web[Astro pages]
+  Review --> CMS[Directus editorial records]
+  CMS --> Web[Astro pages]
   Web --> Signals[GSC, social, and votes]
   Signals --> SEO
 ```
@@ -19,10 +20,11 @@ flowchart TD
 | Layer | Owns | Must not own |
 | --- | --- | --- |
 | Astro web | rendering, metadata, Schema, UI, thin application calls | scoring policy, database secrets |
+| Directus | products, localized copy, media, page blocks, SEO fields, editorial versions | votes, ranking metrics, AI job orchestration |
 | SEO engine | intent, opportunity, cannibalization, quality, linking decisions | page rendering, social UI |
 | Content engine | Briefs, prompt assembly, fact injection, draft validation | opportunity prioritization |
 | Shared | generic contracts, enums, validation, utilities | industry-specific workflows |
-| Supabase | durable state, tenant isolation, relations, metrics | prompt orchestration |
+| Supabase | operational state, tenant isolation, topic graph, candidates, votes, metrics | editorial page composition, prompt orchestration |
 | n8n | schedules and external API orchestration | canonical business rules |
 
 ## Data flow rules
@@ -32,15 +34,17 @@ flowchart TD
 3. SEO engine produces a decision plus an explainable reason.
 4. Only approved candidates enter content creation.
 5. Review promotes a draft to a published content record.
-6. Astro renders published records or reviewed content collections.
-7. Performance data updates decisions; it never silently rewrites content.
+6. Approved product and page content is published in Directus.
+7. Astro renders published Directus records; legacy Supabase/local content is a temporary migration fallback.
+8. Performance data updates decisions; it never silently rewrites content.
 
 ## V1 deployment shape
 
 ```text
-Astro static output -> web hosting/CDN
-Supabase            -> Postgres + RLS + later Auth/Realtime
-n8n                 -> existing Seoul VPS or another controlled runtime
+Astro server output -> web hosting/CDN
+Directus            -> editorial CMS + separate PostgreSQL + object storage
+Supabase            -> operational Postgres + RLS + later Auth/Realtime
+n8n                  -> existing Seoul VPS or another controlled runtime
 ```
 
 The web app should remain deployable without n8n. A failed workflow must not

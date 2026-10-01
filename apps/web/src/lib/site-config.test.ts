@@ -28,4 +28,19 @@ describe('site configuration', () => {
     expect(config.hero.primaryHref).toBe('/bags');
     expect(config.hero.secondaryHref).toBe('/design-brief');
   });
+
+  it('accepts a variable-size CMS catalog and localized detail modules', () => {
+    const catalog = [...defaultSiteConfig.catalog, {
+      ...defaultSiteConfig.catalog[0],
+      slug: 'fourth-concept',
+      name: 'Fourth concept',
+      highlights: [{ title: 'Localized highlight', text: 'Localized detail.' }],
+      planningPoints: ['Localized planning point'],
+    }];
+    const config = normalizeSiteConfig({ catalog });
+
+    expect(config.catalog).toHaveLength(4);
+    expect(config.catalog[3]?.highlights[0]?.title).toBe('Localized highlight');
+    expect(config.catalog[3]?.planningPoints).toEqual(['Localized planning point']);
+  });
 });
