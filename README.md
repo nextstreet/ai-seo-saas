@@ -30,6 +30,18 @@ supabase start
 supabase db reset
 ```
 
+本地 Directus 内容后台（需要 Docker）：
+
+```bash
+cp directus/.env.example directus/.env
+pnpm cms:up
+pnpm cms:bootstrap
+```
+
+后台默认地址为 `http://localhost:8055/admin`。首次运行前必须在
+`directus/.env` 中更换默认账号、密码和 `DIRECTUS_SECRET`。完整配置和生产
+权限要求见 [directus/README.md](directus/README.md)。
+
 ## 当前可演示闭环
 
 - `/studio/`：在构建时运行 Topic Graph、机会评分、人工批准与 Brief 生成。
@@ -45,6 +57,7 @@ supabase db reset
 | 路径 | 职责 |
 | --- | --- |
 | `apps/web` | Astro SEO 网站与后续轻量后台 |
+| `directus` | 多语言产品、页面、SEO 与社媒内容后台 |
 | `packages/shared` | 通用类型、Schema、常量 |
 | `packages/seo-engine` | SEO 决策与机会评分 |
 | `packages/content-engine` | Brief、事实注入、内容验证 |

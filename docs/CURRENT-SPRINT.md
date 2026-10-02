@@ -41,12 +41,21 @@ CLI can understand without rereading the original conversation.
 
 ## Next implementation tasks
 
-1. Add a Supabase-backed Topic Graph repository and integration tests against a local reset database.
-2. Add authenticated reviewer commands that update candidates and create drafts without exposing a service-role key.
-3. Persist reviewed graph-to-page projections instead of deriving them only from local content metadata.
-4. Research, review, and add the first coherent launch cluster; do not bulk-publish thin pages.
+1. Deploy the included Directus stack and run the idempotent V1 bootstrap.
+2. Finish locale-prefixed Astro routes and render Directus page blocks through a constrained component registry.
+3. Migrate reviewed product/page copy from `site_settings.config.catalog` and `content_pages`, then remove the legacy editorial write UI.
+4. Create the production Web Reader role and verify published-only access.
+5. Research, review, and add the first coherent launch cluster; do not bulk-publish thin pages.
+
+## Directus foundation completed
+
+- [x] Separate local Directus/PostgreSQL service definition.
+- [x] Idempotent multilingual V1 schema and starter-content bootstrap.
+- [x] Server-only Astro reader with locale fallback and CMS outage fallback.
+- [x] Flexible product count instead of the previous fixed three-item catalog.
+- [x] Keyword-target and social-planning collections reserved for later flows.
 
 ## Explicitly deferred
 
-Strapi, GSC OAuth, production n8n flows, visual generation, social APIs, complete
+GSC OAuth, production n8n flows, visual generation, social APIs, complete
 forum, billing, and advanced AI orchestration.

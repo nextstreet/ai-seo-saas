@@ -230,3 +230,23 @@ V1.1 最小闭环：`Concept -> Vote -> Social -> Winner -> Sample -> Real Produ
 第一阶段指标是 Time to First Indexed Pages、Indexed Pages、GSC Impressions、
 Ranking Queries、Topic Coverage、Image Visibility、Social Engagement、Content
 Maintenance Time 与 Qualified Inquiries，而不是功能数量、代码量或 Agent 数量。
+
+## 16. V1 发布闭环
+
+后台发布路径固定为：
+
+```text
+Candidate approved
+  -> Create draft
+  -> Edit structured page content
+  -> Submit for review
+  -> Publish
+  -> /content/{slug} + sitemap
+```
+
+- `/admin` 管理候选内容和质量门槛。
+- `/admin/pages` 管理草稿、审核、发布、更新和归档页面。
+- Candidate 创建 Draft、页面状态推进均通过 Supabase 事务函数完成，禁止分别更新两张表。
+- 发布动作会在数据库再次检查 Quality Gate、正文分区和段落完整性。
+- 生产环境默认禁止种子数据回退；`ALLOW_SEED_FALLBACK=true` 仅用于本地演示与开发。
+- 数据库变更先运行 `supabase db reset` 验证，再通过 `supabase db push --dry-run` 检查目标项目。

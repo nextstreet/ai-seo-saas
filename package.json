@@ -8,6 +8,9 @@
   },
   "scripts": {
     "dev": "pnpm --filter @ai-seo/web dev",
+    "cms:up": "docker compose --env-file directus/.env -f directus/docker-compose.yml up -d",
+    "cms:down": "docker compose --env-file directus/.env -f directus/docker-compose.yml down",
+    "cms:bootstrap": "node directus/bootstrap.mjs",
     "build": "pnpm -r build",
     "typecheck": "pnpm -r typecheck",
     "lint": "pnpm -r lint",
