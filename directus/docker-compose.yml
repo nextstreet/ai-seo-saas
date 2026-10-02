@@ -1,0 +1,65 @@
+# Self-hosted Directus publishing CMS for local development.
+# Usage:
+#   cd directus
+#   cp .env.example .env   # then set KEY/ADMIN_* values
+#   docker compose up -d
+#   docker compose exec directus directus schema apply ./snapshots/2026-10-02-cms.yaml
+
+services:
+  database:
+    image: postgres:16
+    container_name: ai-seo-cms-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_POSTGRES_USER:-directus}
+      POSTGRES_PASSWORD: ${DB_POSTGRES_PASSWORD:-directus}
+      POSTGRES_DB: ${DB_POSTGRES_DB:-directus}
+    volumes:
+      - cms_db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_POSTGRES_USER:-directus}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  directus:
+    image: directus/directus:12.4.1
+    container_name: ai-seo-cms
+    restart: unless-stopped
+    ports:
+      - "8055:8055"
+    depends_on:
+      database:
+        condition: service_healthy
+    environment:
+      KEY: ${KEY}
+      SECRET: ${SECRET}
+
+      ADMIN_EMAIL: ${ADMIN_EMAIL}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+
+      PUBLIC_URL: ${PUBLIC_URL:-http://localhost:8055}
+
+      DB_CLIENT: pg
+      DB_HOST: database
+      DB_PORT: "5432"
+      DB_DATABASE: ${DB_POSTGRES_DB:-directus}
+      DB_USER: ${DB_POSTGRES_USER:-directus}
+      DB_PASSWORD: ${DB_POSTGRES_PASSWORD:-directus}
+
+      WEBSOCKETS_ENABLED: "true"
+      CACHE_ENABLED: "false"
+      CACHE_AUTO_PURGE: "true"
+
+      STORAGE_LOCATIONS: local
+      STORAGE_LOCAL_DRIVER: local
+      STORAGE_LOCAL_ROOT: /directus/uploads
+    volumes:
+      - cms_uploads:/directus/uploads
+      - cms_extensions:/directus/extensions
+      - ./snapshots:/directus/snapshots:ro
+
+volumes:
+  cms_db:
+  cms_uploads:
+  cms_extensions:

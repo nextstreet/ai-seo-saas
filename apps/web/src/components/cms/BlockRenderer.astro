@@ -1,0 +1,99 @@
+---
+import type { CmsBlock } from '@ai-seo/shared';
+
+interface Props {
+  blocks: CmsBlock[];
+}
+
+const { blocks } = Astro.props;
+---
+
+{blocks.map((block) => (
+  block.blockType === 'heading' ? (
+    <h2>{block.heading}</h2>
+  ) : block.blockType === 'text' ? (
+    <article class="prose cms-body" set:html={block.body} />
+  ) : block.blockType === 'options' ? (
+    <section aria-label={block.items[0]?.label ?? 'Options'}>
+      <div class="grid">
+        {block.items.map((item) => (
+          <article class="card">
+            <h3>{item.label}</h3>
+            <p>{item.detail}</p>
+          </article>
+        ))}
+      </div>
+    </section>
+  ) : block.blockType === 'steps' ? (
+    <section aria-label="Steps">
+      <ol class="steps">
+        {block.items.map((item) => (
+          <li><strong>{item.name}:</strong> {item.text}</li>
+        ))}
+      </ol>
+    </section>
+  ) : block.blockType === 'faq' ? (
+    <section class="faq" aria-label="Frequently asked questions">
+      {block.items.map((item) => (
+        <details>
+          <summary>{item.question}</summary>
+          <p>{item.answer}</p>
+        </details>
+      ))}
+    </section>
+  ) : block.blockType === 'comparison' ? (
+    <section aria-label={block.heading ?? 'Comparison'}>
+      {block.heading && <h2>{block.heading}</h2>}
+      <table>
+        <thead>
+          <tr><th scope="col">Dimension</th><th scope="col">Difference</th></tr>
+        </thead>
+        <tbody>
+          {block.items.map((item) => (
+            <tr>
+              <th scope="row">{item.dimension}</th>
+              <td>{item.difference}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </section>
+  ) : (
+    <aside class="cta-card" aria-labelledby="cta-heading">
+      {block.heading && <h2 id="cta-heading">{block.heading}</h2>}
+      {block.body && <article class="prose cms-body" set:html={block.body} />}
+      <a class="cta-button" href={block.ctaUrl}>{block.ctaLabel}</a>
+    </aside>
+  )
+))}
+
+<style>
+  .faq details {
+    border: 1px solid #eadde8;
+    border-radius: 1rem;
+    padding: 1rem 1.25rem;
+    margin-block: .75rem;
+    background: white;
+  }
+  .faq summary { font-weight: 600; cursor: pointer; }
+  .cta-card {
+    margin-top: 2.5rem;
+    padding: 1.6rem;
+    border: 1px solid #d9b8d2;
+    border-radius: 1rem;
+    background: white;
+  }
+  .cta-card h2 { margin-top: 0; }
+  .cta-button {
+    display: inline-block;
+    margin-top: .75rem;
+    padding: .7rem 1.4rem;
+    border-radius: 999px;
+    background: #6d2e68;
+    color: white;
+    font-weight: 700;
+    text-decoration: none;
+  }
+  table { width: 100%; border-collapse: collapse; margin-block: 1rem; }
+  th, td { padding: .65rem; border: 1px solid #eadde8; text-align: left; }
+</style>

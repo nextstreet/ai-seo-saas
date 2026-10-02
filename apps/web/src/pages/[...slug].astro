@@ -1,71 +1,142 @@
 ---
 import { getCollection, render, type CollectionEntry } from 'astro:content';
 import BaseLayout from '../layouts/BaseLayout.astro';
+import BlockRenderer from '../components/cms/BlockRenderer.astro';
+import { getPublishedCmsPages, type CmsPage } from '../lib/cms/directus';
+
+type PageSource =
+  | { source: 'local'; page: CollectionEntry<'pages'> }
+  | { source: 'directus'; page: CmsPage };
 
 export async function getStaticPaths() {
-  const pages = await getCollection('pages', ({ data }) => data.reviewed);
-  const topicIds = new Set(pages.map(({ data }) => data.topicId));
-  for (const page of pages) {
+  const reservedPaths = new Set(['/', '/custom/', '/guides/', '/studio/']);
+  const localPages = await getCollection('pages', ({ data }) => data.reviewed);
+  const topicIds = new Set(localPages.map(({ data }) => data.topicId));
+  for (const page of localPages) {
     const missingTopicId = page.data.relatedTopicIds.find((topicId) => !topicIds.has(topicId));
     if (missingTopicId) {
       throw new Error(`Reviewed page ${page.id} links to missing topic ${missingTopicId}.`);
     }
   }
-  return pages.map((page) => ({
-    params: { slug: page.data.canonicalPath.replace(/^\//, '').replace(/\/$/, '') },
-    props: { page },
+
+  const paths = new Map<string, PageSource>();
+  for (const page of localPages) paths.set(page.data.canonicalPath, { source: 'local', page });
+  for (const page of await getPublishedCmsPages()) {
+    if (!reservedPaths.has(page.path)) paths.set(page.path, { source: 'directus', page });
+  }
+
+  return [...paths.entries()].map(([path, entry]) => ({
+    params: { slug: path.replace(/^\//, '').replace(/\/$/, '') },
+    props: { entry },
   }));
 }
 
 interface Props {
-  page: CollectionEntry<'pages'>;
+  entry: PageSource;
 }
 
-const { page } = Astro.props;
-const { Content } = await render(page);
-const relatedPages = (await getCollection('pages', ({ data }) => data.reviewed)).filter(
-  ({ data }) => page.data.relatedTopicIds.includes(data.topicId),
-);
+const { entry } = Astro.props;
+const localPage = entry.source === 'local' ? entry.page : undefined;
+const cmsPage = entry.source === 'directus' ? entry.page : undefined;
+const LocalContent = localPage ? (await render(localPage)).Content : undefined;
+const allLocalPages = await getCollection('pages', ({ data }) => data.reviewed);
+const allCmsPages = await getPublishedCmsPages();
+const relatedTopicIds = localPage?.data.relatedTopicIds ?? cmsPage?.relatedTopicIds ?? [];
+const relatedPages = [
+  ...allLocalPages
+    .filter(({ data }) => relatedTopicIds.includes(data.topicId))
+    .map(({ data }) => ({ path: data.canonicalPath, title: data.title })),
+  ...allCmsPages
+    .filter((page) => page.topicId && relatedTopicIds.includes(page.topicId))
+    .map((page) => ({ path: page.path, title: page.title })),
+];
+const pagePath = localPage?.data.canonicalPath ?? cmsPage!.path;
+const pageTitle = localPage?.data.title ?? cmsPage!.title;
+const description = localPage?.data.description ?? cmsPage!.description;
+const pageType = localPage?.data.pageType ?? cmsPage!.pageType;
 const site = Astro.site ?? Astro.url;
-const breadcrumbItems = page.data.breadcrumbs.map((item, index) => ({
+const breadcrumbs = localPage?.data.breadcrumbs ?? [
+  { label: 'Home', href: '/' },
+  { label: pageTitle, href: pagePath },
+];
+const breadcrumbItems = breadcrumbs.map((item, index) => ({
   '@type': 'ListItem',
   position: index + 1,
   name: item.label,
   item: new URL(item.href, site).href,
 }));
-const primarySchema = page.data.pageType === 'guide'
+const stepsBlock = cmsPage?.blocks.find((block) => block.blockType === 'steps');
+const faqBlock = cmsPage?.blocks.find((block) => block.blockType === 'faq');
+
+const primarySchema = localPage?.data.pageType === 'guide'
   ? {
       '@type': 'HowTo',
-      name: page.data.title,
-      description: page.data.description,
-      step: page.data.steps.map((step) => ({ '@type': 'HowToStep', ...step })),
+      name: localPage.data.title,
+      description: localPage.data.description,
+      step: localPage.data.steps.map((step) => ({ '@type': 'HowToStep', ...step })),
     }
-  : {
-      '@type': 'WebPage',
-      name: page.data.title,
-      description: page.data.description,
-      about: page.data.primaryTopic,
-    };
+  : stepsBlock
+    ? {
+        '@type': 'HowTo',
+        name: cmsPage!.title,
+        description: cmsPage!.description,
+        step: stepsBlock.items.map((step, index) => ({
+          '@type': 'HowToStep',
+          position: index + 1,
+          name: step.name,
+          text: step.text,
+        })),
+      }
+    : cmsPage?.pageType === 'guide'
+      ? {
+          '@type': 'Article',
+          headline: cmsPage.title,
+          description: cmsPage.description,
+          ...(cmsPage.publishedAt ? { datePublished: cmsPage.publishedAt } : {}),
+          ...(cmsPage.updatedAt ? { dateModified: cmsPage.updatedAt } : {}),
+        }
+      : {
+          '@type': 'WebPage',
+          name: pageTitle,
+          description,
+          ...(localPage?.data.primaryTopic || cmsPage?.primaryTopic
+            ? { about: localPage?.data.primaryTopic ?? cmsPage?.primaryTopic }
+            : {}),
+        };
+
+const faqSchema = faqBlock
+  ? {
+      '@type': 'FAQPage',
+      mainEntity: faqBlock.items.map((item) => ({
+        '@type': 'Question',
+        name: item.question,
+        acceptedAnswer: { '@type': 'Answer', text: item.answer },
+      })),
+    }
+  : undefined;
+
 const schema = {
   '@context': 'https://schema.org',
   '@graph': [
     primarySchema,
     { '@type': 'BreadcrumbList', itemListElement: breadcrumbItems },
+    ...(faqSchema ? [faqSchema] : []),
   ],
 };
 ---
 
 <BaseLayout
-  title={page.data.title}
-  description={page.data.description}
-  canonicalPath={page.data.canonicalPath}
+  title={cmsPage?.seoTitle ?? pageTitle}
+  description={description}
+  canonicalPath={pagePath}
   schema={schema}
+  noIndex={cmsPage?.noIndex}
 >
   <nav aria-label="Breadcrumb">
     <ol class="breadcrumbs">
-      {page.data.breadcrumbs.map((item, index) => (
+      {breadcrumbs.map((item, index) => (
         <li>
-          {index === page.data.breadcrumbs.length - 1
+          {index === breadcrumbs.length - 1
             ? <span aria-current="page">{item.label}</span>
             : <a href={item.href}>{item.label}</a>}
         </li>
@@ -73,36 +144,41 @@ const schema = {
     </ol>
   </nav>
 
-  <p class="eyebrow">Reviewed {page.data.pageType.replace('_', ' ')} page</p>
-  <h1>{page.data.title}</h1>
-  <p class="lede">{page.data.description}</p>
+  <p class="eyebrow">{cmsPage?.eyebrow ?? `Reviewed ${pageType.replace('_', ' ')} page`}</p>
+  <h1>{pageTitle}</h1>
+  <p class="lede">{cmsPage?.lead ?? description}</p>
 
-  {page.data.pageType === 'customization' && (
+  {localPage?.data.pageType === 'customization' && (
     <section aria-labelledby="option-heading">
       <h2 id="option-heading">Decisions to make</h2>
       <div class="grid">
-        {page.data.options.map((option) => (
+        {localPage.data.options.map((option) => (
           <article class="card"><h3>{option.label}</h3><p>{option.detail}</p></article>
         ))}
       </div>
       <h2>Project path</h2>
-      <ol class="steps">{page.data.process.map((step) => <li>{step}</li>)}</ol>
+      <ol class="steps">{localPage.data.process.map((step) => <li>{step}</li>)}</ol>
     </section>
   )}
 
-  {page.data.pageType === 'guide' && (
+  {localPage?.data.pageType === 'guide' && (
     <section aria-labelledby="steps-heading">
       <h2 id="steps-heading">At a glance</h2>
       <ol class="steps">
-        {page.data.steps.map((step) => <li><strong>{step.name}:</strong> {step.text}</li>)}
+        {localPage.data.steps.map((step) => <li><strong>{step.name}:</strong> {step.text}</li>)}
       </ol>
     </section>
   )}
 
-  <article class="prose"><Content /></article>
+  {LocalContent && <article class="prose"><LocalContent /></article>}
+  {cmsPage && (cmsPage.blocks.length > 0
+    ? <BlockRenderer blocks={cmsPage.blocks} />
+    : <article class="prose cms-body" set:html={cmsPage.bodyHtml} />)}
 
-  <aside aria-labelledby="related-heading">
-    <h2 id="related-heading">Related reviewed pages</h2>
-    <ul>{relatedPages.map(({ data }) => <li><a href={data.canonicalPath}>{data.title}</a></li>)}</ul>
-  </aside>
+  {relatedPages.length > 0 && (
+    <aside aria-labelledby="related-heading">
+      <h2 id="related-heading">Related reviewed pages</h2>
+      <ul>{relatedPages.map((page) => <li><a href={page.path}>{page.title}</a></li>)}</ul>
+    </aside>
+  )}
 </BaseLayout>

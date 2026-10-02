@@ -4,10 +4,15 @@ interface Props {
   description: string;
   canonicalPath?: string;
   schema?: Record<string, unknown>;
+  noIndex?: boolean;
 }
 
-const { title, description, canonicalPath, schema } = Astro.props;
-const siteName = import.meta.env.PUBLIC_SITE_NAME ?? 'Ita Bag Design Lab';
+import { getCmsSite, getHeaderNavigation } from '../lib/cms/directus';
+
+const { title, description, canonicalPath, schema, noIndex = false } = Astro.props;
+const [cmsSite, navigation] = await Promise.all([getCmsSite(), getHeaderNavigation()]);
+const siteName = cmsSite?.siteName ?? import.meta.env.PUBLIC_SITE_NAME ?? 'Ita Bag Design Lab';
+const footerText = cmsSite?.footerText ?? 'V1 foundation — content requires review before publication.';
 const canonical = new URL(canonicalPath ?? Astro.url.pathname, Astro.site ?? Astro.url);
 ---
 
@@ -17,6 +22,7 @@ const canonical = new URL(canonicalPath ?? Astro.url.pathname, Astro.site ?? Ast
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width" />
     <meta name="description" content={description} />
+    {noIndex && <meta name="robots" content="noindex, nofollow" />}
     <link rel="canonical" href={canonical} />
     <title>{title} | {siteName}</title>
     {schema && <script is:inline type="application/ld+json" set:html={JSON.stringify(schema)} />}
@@ -25,15 +31,17 @@ const canonical = new URL(canonicalPath ?? Astro.url.pathname, Astro.site ?? Ast
     <header class="shell">
       <a class="brand" href="/">{siteName}</a>
       <nav aria-label="Main navigation">
-        <a href="/custom/">Custom</a>
-        <a href="/guides/">Guides</a>
-        <a href="/studio/">V1 Studio</a>
+        {navigation.map((item) => (
+          <a href={item.url} target={item.openInNewTab ? '_blank' : undefined} rel={item.openInNewTab ? 'noreferrer' : undefined}>
+            {item.label}
+          </a>
+        ))}
       </nav>
     </header>
     <main class="shell">
       <slot />
     </main>
-    <footer class="shell">V1 foundation — content requires review before publication.</footer>
+    <footer class="shell">{footerText}</footer>
   </body>
 </html>
 
@@ -62,6 +70,9 @@ const canonical = new URL(canonicalPath ?? Astro.url.pathname, Astro.site ?? Ast
   .card-link:hover { border-color: #b96aa8; transform: translateY(-2px); }
   .prose { max-width: 72ch; }
   .prose h2 { margin-top: 2.5rem; line-height: 1.2; }
+  .cms-body img { max-width: 100%; height: auto; }
+  .cms-body table { width: 100%; border-collapse: collapse; }
+  .cms-body th, .cms-body td { padding: .65rem; border: 1px solid #eadde8; text-align: left; }
   .breadcrumbs { display: flex; flex-wrap: wrap; gap: .5rem; padding: 0; list-style: none; font-size: .9rem; }
   .breadcrumbs li:not(:last-child)::after { content: '/'; margin-left: .5rem; color: #978c9b; }
   .meta { color: #6b6270; }

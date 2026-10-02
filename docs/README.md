@@ -8,6 +8,7 @@
 | `DECISIONS.md` | proposing a framework, CMS, database, or major architectural change |
 | `CURRENT-SPRINT.md` | selecting the next implementation task |
 | `ROADMAP.md` | checking phase order and deferrals |
+| `DIRECTUS.md` | configuring CMS collections, permissions, and publishing rebuilds |
 | `CODEX-LOCAL-WORKFLOW.md` | using Trae + Codex CLI and writing task prompts |
 
 `AGENTS.md` at repository root is the mandatory AI entry point. Documentation

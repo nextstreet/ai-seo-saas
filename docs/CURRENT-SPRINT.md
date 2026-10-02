@@ -39,6 +39,13 @@ CLI can understand without rereading the original conversation.
 - [x] Canonical URL, metadata, JSON-LD, breadcrumbs, and related links.
 - [x] Static sitemap output.
 
+### 4. Directus publishing CMS
+
+- [x] Tenant-scoped build-time source for published pages.
+- [x] CMS-managed site name, footer, and header navigation.
+- [x] Repository content fallback for local and recovery builds.
+- [x] Explicit draft/review/published collection contract and deploy-hook flow.
+
 ## Next implementation tasks
 
 1. Add a Supabase-backed Topic Graph repository and integration tests against a local reset database.

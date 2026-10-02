@@ -1,15 +1,25 @@
 ---
 import { getCollection } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
+import BlockRenderer from '../../components/cms/BlockRenderer.astro';
+import { getPublishedCmsPage, getPublishedCmsPages } from '../../lib/cms/directus';
 
-const pages = await getCollection('pages', ({ data }) => data.reviewed && data.pageType === 'customization');
+const cmsPages = (await getPublishedCmsPages()).filter((page) => page.pageType === 'customization' && page.path !== '/custom/');
+const cmsPaths = new Set(cmsPages.map((page) => page.path));
+const pages = (await getCollection('pages', ({ data }) => data.reviewed && data.pageType === 'customization'))
+  .filter(({ data }) => !cmsPaths.has(data.canonicalPath));
+const cmsPage = await getPublishedCmsPage('/custom/');
 ---
 
-<BaseLayout title="Custom Ita Bag Planning" description="Reviewed resources for planning a custom Ita Bag project, from display architecture to sampling and production review." canonicalPath="/custom/">
-  <p class="eyebrow">Customization</p>
-  <h1>Plan the bag around the collection.</h1>
-  <p class="lede">Turn display needs, bag format, materials, and production constraints into a decision-ready brief.</p>
+<BaseLayout title={cmsPage?.seoTitle ?? cmsPage?.title ?? 'Custom Ita Bag Planning'} description={cmsPage?.description ?? 'Reviewed resources for planning a custom Ita Bag project, from display architecture to sampling and production review.'} canonicalPath="/custom/" noIndex={cmsPage?.noIndex}>
+  <p class="eyebrow">{cmsPage?.eyebrow ?? 'Customization'}</p>
+  <h1>{cmsPage?.title ?? 'Plan the bag around the collection.'}</h1>
+  <p class="lede">{cmsPage?.lead ?? 'Turn display needs, bag format, materials, and production constraints into a decision-ready brief.'}</p>
+  {cmsPage && (cmsPage.blocks.length > 0
+    ? <BlockRenderer blocks={cmsPage.blocks} />
+    : cmsPage.bodyHtml && <article class="prose cms-body" set:html={cmsPage.bodyHtml} />)}
   <section class="grid">
     {pages.map(({ data }) => <a class="card card-link" href={data.canonicalPath}><h2>{data.title}</h2><p>{data.description}</p></a>)}
+    {cmsPages.map((page) => <a class="card card-link" href={page.path}><h2>{page.title}</h2><p>{page.description}</p></a>)}
   </section>
 </BaseLayout>

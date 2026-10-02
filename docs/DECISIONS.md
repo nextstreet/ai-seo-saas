@@ -62,3 +62,13 @@ content is not modeled only as an article rewrite.
 Product types, materials, features, components, and applications begin as topic
 nodes. This avoids parallel taxonomies before subtype-specific fields exist.
 Dedicated tables may be introduced later without changing their graph identity.
+
+## ADR-009 — Directus is the reviewed publishing CMS
+
+**Status:** accepted
+
+Directus owns editor-facing page bodies, navigation, and site presentation
+settings. Supabase continues to own operational SEO data and candidate state.
+Astro reads only tenant-scoped `published` records at build time, while local
+reviewed content remains the development fallback. Directus publication must
+trigger a static-site rebuild and may never bypass human review.

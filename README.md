@@ -49,6 +49,7 @@ supabase db reset
 | `packages/seo-engine` | SEO 决策与机会评分 |
 | `packages/content-engine` | Brief、事实注入、内容验证 |
 | `supabase` | PostgreSQL migration 与种子数据 |
+| `directus` | 本地 Headless CMS、版本化 schema snapshot 与开发种子 |
 | `workflows/n8n` | n8n 集成说明和后续工作流 |
 | `docs` | 架构、数据库、路线图和本地开发上下文 |
 

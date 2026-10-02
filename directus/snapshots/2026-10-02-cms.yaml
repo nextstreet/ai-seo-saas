@@ -1,0 +1,1754 @@
+version: 1
+directus: 12.4.1
+vendor: postgres
+collections:
+  - collection: cms_sites
+    meta:
+      accountability: all
+      archive_app_filter: true
+      archive_field: status
+      archive_value: archived
+      collapse: open
+      collection: cms_sites
+      color: null
+      display_template: null
+      group: null
+      hidden: false
+      icon: settings_applications
+      item_duplication_fields: null
+      note: One published site-settings row per tenant.
+      singleton: false
+      sort: null
+      sort_field: null
+      translations: null
+      unarchive_value: draft
+    schema:
+      name: cms_sites
+  - collection: cms_navigation
+    meta:
+      accountability: all
+      archive_app_filter: true
+      archive_field: status
+      archive_value: archived
+      collapse: open
+      collection: cms_navigation
+      color: null
+      display_template: null
+      group: null
+      hidden: false
+      icon: map
+      item_duplication_fields: null
+      note: Tenant navigation, ordered by sort.
+      singleton: false
+      sort: null
+      sort_field: sort
+      translations: null
+      unarchive_value: draft
+    schema:
+      name: cms_navigation
+  - collection: cms_pages
+    meta:
+      accountability: all
+      archive_app_filter: true
+      archive_field: status
+      archive_value: archived
+      collapse: open
+      collection: cms_pages
+      color: null
+      display_template: '{{title}}'
+      group: null
+      hidden: false
+      icon: article
+      item_duplication_fields: null
+      note: Reviewed publishing pages. Only published rows are read by Astro.
+      singleton: false
+      sort: null
+      sort_field: null
+      translations: null
+      unarchive_value: draft
+    schema:
+      name: cms_pages
+  - collection: cms_blocks
+    meta:
+      accountability: all
+      archive_app_filter: true
+      archive_field: null
+      archive_value: null
+      collapse: open
+      collection: cms_blocks
+      color: null
+      display_template: '{{block_type}}'
+      group: null
+      hidden: false
+      icon: view_quilt
+      item_duplication_fields: null
+      note: Structured content blocks owned by a cms_pages item.
+      singleton: false
+      sort: null
+      sort_field: sort
+      translations: null
+      unarchive_value: null
+    schema:
+      name: cms_blocks
+fields:
+  # ----- cms_sites -----
+  - collection: cms_sites
+    field: id
+    type: uuid
+    meta:
+      collection: cms_sites
+      conditions: null
+      display: null
+      display_options: null
+      field: id
+      group: null
+      hidden: true
+      interface: input
+      note: null
+      options: null
+      readonly: true
+      required: false
+      sort: 1
+      special:
+        - uuid
+      translations: null
+      validation: null
+      validation_message: null
+      width: full
+    schema:
+      name: id
+      table: cms_sites
+      data_type: uuid
+      default_value: gen_random_uuid()
+      max_length: null
+      numeric_precision: null
+      numeric_scale: null
+      is_nullable: false
+      is_unique: false
+      is_primary_key: true
+      is_generated: false
+      generation_expression: null
+      has_auto_increment: false
+      foreign_key_table: null
+      foreign_key_column: null
+  - collection: cms_sites
+    field: tenant_id
+    type: string
+    meta:
+      collection: cms_sites
+      conditions: null
+      display: null
+      display_options: null
+      field: tenant_id
+      group: null
+      hidden: false
+      interface: input
+      note: Stable tenant key or UUID.
+      options: null
+      readonly: false
+      required: true
+      sort: 2
+      special: []
+      translations: null
+      validation: null
+      validation_message: null
+      width: half
+    schema:
+      name: tenant_id
+      table: cms_sites
+      data_type: varchar
+      default_value: null
+      max_length: 64
+      numeric_precision: null
+      numeric_scale: null
+      is_nullable: false
+      is_unique: false
+      is_primary_key: false
+      is_generated: false
+      generation_expression: null
+      has_auto_increment: false
+      foreign_key_table: null
+      foreign_key_column: null
+  - collection: cms_sites
+    field: status
+    type: string
+    meta:
+      collection: cms_sites
+      conditions: null
+      display: null
+      display_options: null
+      field: status
+      group: null
+      hidden: false
+      interface: select-dropdown
+      note: null
+      options:
+        choices:
+          - { text: Draft, value: draft }
+          - { text: Review, value: review }
+          - { text: Published, value: published }
+          - { text: Archived, value: archived }
+        allowsOther: false
+      readonly: false
+      required: true
+      sort: 3
+      special: []
+      translations: null
+      validation: null
+      validation_message: null
+      width: half
+    schema:
+      name: status
+      table: cms_sites
+      data_type: varchar
+      default_value: draft
+      max_length: 24
+      numeric_precision: null
+      numeric_scale: null
+      is_nullable: false
+      is_unique: false
+      is_primary_key: false
+      is_generated: false
+      generation_expression: null
+      has_auto_increment: false
+      foreign_key_table: null
+      foreign_key_column: null
+  - collection: cms_sites
+    field: site_name
+    type: string
+    meta:
+      collection: cms_sites
+      conditions: null
+      display: null
+      display_options: null
+      field: site_name
+      group: null
+      hidden: false
+      interface: input
+      note: Replaces the header brand and title suffix.
+      options: null
+      readonly: false
+      required: true
+      sort: 4
+      special: []
+      translations: null
+      validation: null
+      validation_message: null
+      width: half
+    schema:
+      name: site_name
+      table: cms_sites
+      data_type: varchar
+      default_value: null
+      max_length: 120
+      numeric_precision: null
+      numeric_scale: null
+      is_nullable: false
+      is_unique: false
+      is_primary_key: false
+      is_generated: false
+      generation_expression: null
+      has_auto_increment: false
+      foreign_key_table: null
+      foreign_key_column: null
+  - collection: cms_sites
+    field: footer_text
+    type: text
+    meta:
+      collection: cms_sites
+      conditions: null
+      display: null
+      display_options: null
+      field: footer_text
+      group: null
+      hidden: false
+      interface: input-multiline
+      note: Replaces the global footer.
+      options: null
+      readonly: false
+      required: true
+      sort: 5
+      special: []
+      translations: null
+      validation: null
+      validation_message: null
+      width: full
+    schema:
+      name: footer_text
+      table: cms_sites
+      data_type: text
+      default_value: null
+      max_length: null
+      numeric_precision: null
+      numeric_scale: null
+      is_nullable: false
+      is_unique: false
+      is_primary_key: false
+      is_generated: false
+      generation_expression: null
+      has_auto_increment: false
+      foreign_key_table: null
+      foreign_key_column: null
+
+  # ----- cms_navigation -----
+  - collection: cms_navigation
+    field: id
+    type: uuid
+    meta:
+      collection: cms_navigation
+      conditions: null
+      display: null
+      display_options: null
+      field: id
+      group: null
+      hidden: true
+      interface: input
+      note: null
+      options: null
+      readonly: true
+      required: false
+      sort: 1
+      special:
+        - uuid
+      translations: null
+      validation: null
+      validation_message: null
+      width: full
+    schema:
+      name: id
+      table: cms_navigation
+      data_type: uuid
+      default_value: gen_random_uuid()
+      max_length: null
+      numeric_precision: null
+      numeric_scale: null
+      is_nullable: false
+      is_unique: false
+      is_primary_key: true
+      is_generated: false
+      generation_expression: null
+      has_auto_increment: false
+      foreign_key_table: null
+      foreign_key_column: null
+  - collection: cms_navigation
+    field: tenant_id
+    type: string
+    meta:
+      collection: cms_navigation
+      conditions: null
+      display: null
+      display_options: null
+      field: tenant_id
+      group: null
+      hidden: false
+      interface: input
+      note: Stable tenant key or UUID.
+      options: null
+      readonly: false
+      required: true
+      sort: 2
+      special: []
+      translations: null
+      validation: null
+      validation_message: null
+      width: half
+    schema:
+      name: tenant_id
+      table: cms_navigation
+      data_type: varchar
+      default_value: null
+      max_length: 64
+      numeric_precision: null
+      numeric_scale: null
+      is_nullable: false
+      is_unique: false
+      is_primary_key: false
+      is_generated: false
+      generation_expression: null
+      has_auto_increment: false
+      foreign_key_table: null
+      foreign_key_column: null
+  - collection: cms_navigation
+    field: status
+    type: string
+    meta:
+      collection: cms_navigation
+      conditions: null
+      display: null
+      display_options: null
+      field: status
+      group: null
+      hidden: false
+      interface: select-dropdown
+      note: null
+      options:
+        choices:
+          - { text: Draft, value: draft }
+          - { text: Review, value: review }
+          - { text: Published, value: published }
+          - { text: Archived, value: archived }
+        allowsOther: false
+      readonly: false
+      required: true
+      sort: 3
+      special: []
+      translations: null
+      validation: null
+      validation_message: null
+      width: half
+    schema:
+      name: status
+      table: cms_navigation
+      data_type: varchar
+      default_value: draft
+      max_length: 24
+      numeric_precision: null
+      numeric_scale: null
+      is_nullable: false
+      is_unique: false
+      is_primary_key: false
+      is_generated: false
+      generation_expression: null
+      has_auto_increment: false
+      foreign_key_table: null
+      foreign_key_column: null
+  - collection: cms_navigation
+    field: location
+    type: string
+    meta:
+      collection: cms_navigation
+      conditions: null
+      display: null
+      display_options: null
+      field: location
+      group: null
+      hidden: false
+      interface: select-dropdown
+      note: Navigation region.
+      options:
+        choices:
+          - { text: Header, value: header }
+        allowsOther: false
+      readonly: false
+      required: true
+      sort: 4
+      special: []
+      translations: null
+      validation: null
+      validation_message: null
+      width: half
+    schema:
+      name: location
+      table: cms_navigation
+      data_type: varchar
+      default_value: header
+      max_length: 24
+      numeric_precision: null
+      numeric_scale: null
+      is_nullable: false
+      is_unique: false
+      is_primary_key: false
+      is_generated: false
+      generation_expression: null
+      has_auto_increment: false
+      foreign_key_table: null
+      foreign_key_column: null
+  - collection: cms_navigation
+    field: label
+    type: string
+    meta:
+      collection: cms_navigation
+      conditions: null
+      display: null
+      display_options: null
+      field: label
+      group: null
+      hidden: false
+      interface: input
+      note: null
+      options: null
+      readonly: false
+      required: true
+      sort: 5
+      special: []
+      translations: null
+      validation: null
+      validation_message: null
+      width: half
+    schema:
+      name: label
+      table: cms_navigation
+      data_type: varchar
+      default_value: null
+      max_length: 80
+      numeric_precision: null
+      numeric_scale: null
+      is_nullable: false
+      is_unique: false
+      is_primary_key: false
+      is_generated: false
+      generation_expression: null
+      has_auto_increment: false
+      foreign_key_table: null
+      foreign_key_column: null
+  - collection: cms_navigation
+    field: url
+    type: string
+    meta:
+      collection: cms_navigation
+      conditions: null
+      display: null
+      display_options: null
+      field: url
+      group: null
+      hidden: false
+      interface: input
+      note: Internal path or absolute URL.
+      options: null
+      readonly: false
+      required: true
+      sort: 6
+      special: []
+      translations: null
+      validation: null
+      validation_message: null
+      width: half
+    schema:
+      name: url
+      table: cms_navigation
+      data_type: varchar
+      default_value: null
+      max_length: 255
+      numeric_precision: null
+      numeric_scale: null
+      is_nullable: false
+      is_unique: false
+      is_primary_key: false
+      is_generated: false
+      generation_expression: null
+      has_auto_increment: false
+      foreign_key_table: null
+      foreign_key_column: null
+  - collection: cms_navigation
+    field: open_in_new_tab
+    type: boolean
+    meta:
+      collection: cms_navigation
+      conditions: null
+      display: boolean
+      display_options:
+        label: Open in new tab
+      field: open_in_new_tab
+      group: null
+      hidden: false
+      interface: boolean
+      note: null
+      options: null
+      readonly: false
+      required: false
+      sort: 7
+      special: []
+      translations: null
+      validation: null
+      validation_message: null
+      width: half
+    schema:
+      name: open_in_new_tab
+      table: cms_navigation
+      data_type: boolean
+      default_value: false
+      max_length: null
+      numeric_precision: null
+      numeric_scale: null
+      is_nullable: false
+      is_unique: false
+      is_primary_key: false
+      is_generated: false
+      generation_expression: null
+      has_auto_increment: false
+      foreign_key_table: null
+      foreign_key_column: null
+  - collection: cms_navigation
+    field: sort
+    type: integer
+    meta:
+      collection: cms_navigation
+      conditions: null
+      display: null
+      display_options: null
+      field: sort
+      group: null
+      hidden: true
+      interface: input
+      note: null
+      options: null
+      readonly: false
+      required: false
+      sort: 8
+      special: []
+      translations: null
+      validation: null
+      validation_message: null
+      width: half
+    schema:
+      name: sort
+      table: cms_navigation
+      data_type: integer
+      default_value: null
+      max_length: null
+      numeric_precision: 32
+      numeric_scale: 0
+      is_nullable: true
+      is_unique: false
+      is_primary_key: false
+      is_generated: false
+      generation_expression: null
+      has_auto_increment: false
+      foreign_key_table: null
+      foreign_key_column: null
+
+  # ----- cms_pages -----
+  - collection: cms_pages
+    field: id
+    type: uuid
+    meta:
+      collection: cms_pages
+      conditions: null
+      display: null
+      display_options: null
+      field: id
+      group: null
+      hidden: true
+      interface: input
+      note: null
+      options: null
+      readonly: true
+      required: false
+      sort: 1
+      special:
+        - uuid
+      translations: null
+      validation: null
+      validation_message: null
+      width: full
+    schema:
+      name: id
+      table: cms_pages
+      data_type: uuid
+      default_value: gen_random_uuid()
+      max_length: null
+      numeric_precision: null
+      numeric_scale: null
+      is_nullable: false
+      is_unique: false
+      is_primary_key: true
+      is_generated: false
+      generation_expression: null
+      has_auto_increment: false
+      foreign_key_table: null
+      foreign_key_column: null
+  - collection: cms_pages
+    field: tenant_id
+    type: string
+    meta:
+      collection: cms_pages
+      conditions: null
+      display: null
+      display_options: null
+      field: tenant_id
+      group: null
+      hidden: false
+      interface: input
+      note: Stable tenant key or UUID.
+      options: null
+      readonly: false
+      required: true
+      sort: 2
+      special: []
+      translations: null
+      validation: null
+      validation_message: null
+      width: half
+    schema:
+      name: tenant_id
+      table: cms_pages
+      data_type: varchar
+      default_value: null
+      max_length: 64
+      numeric_precision: null
+      numeric_scale: null
+      is_nullable: false
+      is_unique: false
+      is_primary_key: false
+      is_generated: false
+      generation_expression: null
+      has_auto_increment: false
+      foreign_key_table: null
+      foreign_key_column: null
+  - collection: cms_pages
+    field: status
+    type: string
+    meta:
+      collection: cms_pages
+      conditions: null
+      display: null
+      display_options: null
+      field: status
+      group: null
+      hidden: false
+      interface: select-dropdown
+      note: draft -> review -> published is the normal path.
+      options:
+        choices:
+          - { text: Draft, value: draft }
+          - { text: Review, value: review }
+          - { text: Published, value: published }
+          - { text: Archived, value: archived }
+        allowsOther: false
+      readonly: false
+      required: true
+      sort: 3
+      special: []
+      translations: null
+      validation: null
+      validation_message: null
+      width: half
+    schema:
+      name: status
+      table: cms_pages
+      data_type: varchar
+      default_value: draft
+      max_length: 24
+      numeric_precision: null
+      numeric_scale: null
+      is_nullable: false
+      is_unique: false
+      is_primary_key: false
+      is_generated: false
+      generation_expression: null
+      has_auto_increment: false
+      foreign_key_table: null
+      foreign_key_column: null
+  - collection: cms_pages
+    field: path
+    type: string
+    meta:
+      collection: cms_pages
+      conditions: null
+      display: null
+      display_options: null
+      field: path
+      group: null
+      hidden: false
+      interface: input
+      note: Canonical path such as /guides/example/.
+      options: null
+      readonly: false
+      required: true
+      sort: 4
+      special: []
+      translations: null
+      validation: null
+      validation_message: null
+      width: half
+    schema:
+      name: path
+      table: cms_pages
+      data_type: varchar
+      default_value: null
+      max_length: 255
+      numeric_precision: null
+      numeric_scale: null
+      is_nullable: false
+      is_unique: false
+      is_primary_key: false
+      is_generated: false
+      generation_expression: null
+      has_auto_increment: false
+      foreign_key_table: null
+      foreign_key_column: null
+  - collection: cms_pages
+    field: page_type
+    type: string
+    meta:
+      collection: cms_pages
+      conditions: null
+      display: null
+      display_options: null
+      field: page_type
+      group: null
+      hidden: false
+      interface: select-dropdown
+      note: Page type defined by the product model.
+      options:
+        choices:
+          - { text: Category, value: category }
+          - { text: Commercial, value: commercial }
+          - { text: Product, value: product }
+          - { text: Customization, value: customization }
+          - { text: Component, value: component }
+          - { text: Material, value: material }
+          - { text: Application, value: application }
+          - { text: Design inspiration, value: design_inspiration }
+          - { text: Comparison, value: comparison }
+          - { text: Guide, value: guide }
+          - { text: Gallery, value: gallery }
+          - { text: Community topic, value: community_topic }
+        allowsOther: false
+      readonly: false
+      required: true
+      sort: 5
+      special: []
+      translations: null
+      validation: null
+      validation_message: null
+      width: half
+    schema:
+      name: page_type
+      table: cms_pages
+      data_type: varchar
+      default_value: null
+      max_length: 32
+      numeric_precision: null
+      numeric_scale: null
+      is_nullable: false
+      is_unique: false
+      is_primary_key: false
+      is_generated: false
+      generation_expression: null
+      has_auto_increment: false
+      foreign_key_table: null
+      foreign_key_column: null
+  - collection: cms_pages
+    field: title
+    type: string
+    meta:
+      collection: cms_pages
+      conditions: null
+      display: null
+      display_options: null
+      field: title
+      group: null
+      hidden: false
+      interface: input
+      note: Visible H1.
+      options: null
+      readonly: false
+      required: true
+      sort: 6
+      special: []
+      translations: null
+      validation: null
+      validation_message: null
+      width: full
+    schema:
+      name: title
+      table: cms_pages
+      data_type: varchar
+      default_value: null
+      max_length: 255
+      numeric_precision: null
+      numeric_scale: null
+      is_nullable: false
+      is_unique: false
+      is_primary_key: false
+      is_generated: false
+      generation_expression: null
+      has_auto_increment: false
+      foreign_key_table: null
+      foreign_key_column: null
+  - collection: cms_pages
+    field: seo_title
+    type: string
+    meta:
+      collection: cms_pages
+      conditions: null
+      display: null
+      display_options: null
+      field: seo_title
+      group: null
+      hidden: false
+      interface: input
+      note: Optional search title; falls back to title.
+      options: null
+      readonly: false
+      required: false
+      sort: 7
+      special: []
+      translations: null
+      validation: null
+      validation_message: null
+      width: half
+    schema:
+      name: seo_title
+      table: cms_pages
+      data_type: varchar
+      default_value: null
+      max_length: 255
+      numeric_precision: null
+      numeric_scale: null
+      is_nullable: true
+      is_unique: false
+      is_primary_key: false
+      is_generated: false
+      generation_expression: null
+      has_auto_increment: false
+      foreign_key_table: null
+      foreign_key_column: null
+  - collection: cms_pages
+    field: description
+    type: text
+    meta:
+      collection: cms_pages
+      conditions: null
+      display: null
+      display_options: null
+      field: description
+      group: null
+      hidden: false
+      interface: input-multiline
+      note: Meta description and summary.
+      options: null
+      readonly: false
+      required: true
+      sort: 8
+      special: []
+      translations: null
+      validation: null
+      validation_message: null
+      width: full
+    schema:
+      name: description
+      table: cms_pages
+      data_type: text
+      default_value: null
+      max_length: null
+      numeric_precision: null
+      numeric_scale: null
+      is_nullable: false
+      is_unique: false
+      is_primary_key: false
+      is_generated: false
+      generation_expression: null
+      has_auto_increment: false
+      foreign_key_table: null
+      foreign_key_column: null
+  - collection: cms_pages
+    field: eyebrow
+    type: string
+    meta:
+      collection: cms_pages
+      conditions: null
+      display: null
+      display_options: null
+      field: eyebrow
+      group: null
+      hidden: false
+      interface: input
+      note: Optional label above the H1.
+      options: null
+      readonly: false
+      required: false
+      sort: 9
+      special: []
+      translations: null
+      validation: null
+      validation_message: null
+      width: half
+    schema:
+      name: eyebrow
+      table: cms_pages
+      data_type: varchar
+      default_value: null
+      max_length: 120
+      numeric_precision: null
+      numeric_scale: null
+      is_nullable: true
+      is_unique: false
+      is_primary_key: false
+      is_generated: false
+      generation_expression: null
+      has_auto_increment: false
+      foreign_key_table: null
+      foreign_key_column: null
+  - collection: cms_pages
+    field: lead
+    type: text
+    meta:
+      collection: cms_pages
+      conditions: null
+      display: null
+      display_options: null
+      field: lead
+      group: null
+      hidden: false
+      interface: input-multiline
+      note: Optional introductory copy.
+      options: null
+      readonly: false
+      required: false
+      sort: 10
+      special: []
+      translations: null
+      validation: null
+      validation_message: null
+      width: full
+    schema:
+      name: lead
+      table: cms_pages
+      data_type: text
+      default_value: null
+      max_length: null
+      numeric_precision: null
+      numeric_scale: null
+      is_nullable: true
+      is_unique: false
+      is_primary_key: false
+      is_generated: false
+      generation_expression: null
+      has_auto_increment: false
+      foreign_key_table: null
+      foreign_key_column: null
+  - collection: cms_pages
+    field: body_html
+    type: text
+    meta:
+      collection: cms_pages
+      conditions: null
+      display: null
+      display_options: null
+      field: body_html
+      group: null
+      hidden: false
+      interface: input-rich-text
+      note: Legacy free-form body. Prefer structured blocks.
+      options: null
+      readonly: false
+      required: false
+      sort: 11
+      special: []
+      translations: null
+      validation: null
+      validation_message: null
+      width: full
+    schema:
+      name: body_html
+      table: cms_pages
+      data_type: text
+      default_value: null
+      max_length: null
+      numeric_precision: null
+      numeric_scale: null
+      is_nullable: true
+      is_unique: false
+      is_primary_key: false
+      is_generated: false
+      generation_expression: null
+      has_auto_increment: false
+      foreign_key_table: null
+      foreign_key_column: null
+  - collection: cms_pages
+    field: primary_topic
+    type: string
+    meta:
+      collection: cms_pages
+      conditions: null
+      display: null
+      display_options: null
+      field: primary_topic
+      group: null
+      hidden: false
+      interface: input
+      note: Optional human-readable topic.
+      options: null
+      readonly: false
+      required: false
+      sort: 12
+      special: []
+      translations: null
+      validation: null
+      validation_message: null
+      width: half
+    schema:
+      name: primary_topic
+      table: cms_pages
+      data_type: varchar
+      default_value: null
+      max_length: 255
+      numeric_precision: null
+      numeric_scale: null
+      is_nullable: true
+      is_unique: false
+      is_primary_key: false
+      is_generated: false
+      generation_expression: null
+      has_auto_increment: false
+      foreign_key_table: null
+      foreign_key_column: null
+  - collection: cms_pages
+    field: topic_id
+    type: string
+    meta:
+      collection: cms_pages
+      conditions: null
+      display: null
+      display_options: null
+      field: topic_id
+      group: null
+      hidden: false
+      interface: input
+      note: Optional stable topic identifier.
+      options: null
+      readonly: false
+      required: false
+      sort: 13
+      special: []
+      translations: null
+      validation: null
+      validation_message: null
+      width: half
+    schema:
+      name: topic_id
+      table: cms_pages
+      data_type: varchar
+      default_value: null
+      max_length: 64
+      numeric_precision: null
+      numeric_scale: null
+      is_nullable: true
+      is_unique: false
+      is_primary_key: false
+      is_generated: false
+      generation_expression: null
+      has_auto_increment: false
+      foreign_key_table: null
+      foreign_key_column: null
+  - collection: cms_pages
+    field: related_topic_ids
+    type: json
+    meta:
+      collection: cms_pages
+      conditions: null
+      display: null
+      display_options: null
+      field: related_topic_ids
+      group: null
+      hidden: false
+      interface: list
+      note: Array of stable topic identifiers.
+      options:
+        template: '{{item}}'
+        fields:
+          - field: item
+            name: Topic ID
+            type: string
+      readonly: false
+      required: false
+      sort: 14
+      special:
+        - cast-json
+      translations: null
+      validation: null
+      validation_message: null
+      width: full
+    schema:
+      name: related_topic_ids
+      table: cms_pages
+      data_type: json
+      default_value: null
+      max_length: null
+      numeric_precision: null
+      numeric_scale: null
+      is_nullable: true
+      is_unique: false
+      is_primary_key: false
+      is_generated: false
+      generation_expression: null
+      has_auto_increment: false
+      foreign_key_table: null
+      foreign_key_column: null
+  - collection: cms_pages
+    field: published_at
+    type: timestamp
+    meta:
+      collection: cms_pages
+      conditions: null
+      display: null
+      display_options: null
+      field: published_at
+      group: null
+      hidden: false
+      interface: datetime
+      note: Optional structured-data publication date.
+      options: null
+      readonly: false
+      required: false
+      sort: 15
+      special: []
+      translations: null
+      validation: null
+      validation_message: null
+      width: half
+    schema:
+      name: published_at
+      table: cms_pages
+      data_type: timestamp with time zone
+      default_value: null
+      max_length: null
+      numeric_precision: null
+      numeric_scale: null
+      is_nullable: true
+      is_unique: false
+      is_primary_key: false
+      is_generated: false
+      generation_expression: null
+      has_auto_increment: false
+      foreign_key_table: null
+      foreign_key_column: null
+  - collection: cms_pages
+    field: date_updated
+    type: timestamp
+    meta:
+      collection: cms_pages
+      conditions: null
+      display: null
+      display_options: null
+      field: date_updated
+      group: null
+      hidden: true
+      interface: datetime
+      note: null
+      options: null
+      readonly: true
+      required: false
+      sort: 16
+      special:
+        - date-updated
+      translations: null
+      validation: null
+      validation_message: null
+      width: half
+    schema:
+      name: date_updated
+      table: cms_pages
+      data_type: timestamp with time zone
+      default_value: null
+      max_length: null
+      numeric_precision: null
+      numeric_scale: null
+      is_nullable: true
+      is_unique: false
+      is_primary_key: false
+      is_generated: false
+      generation_expression: null
+      has_auto_increment: false
+      foreign_key_table: null
+      foreign_key_column: null
+  - collection: cms_pages
+    field: noindex
+    type: boolean
+    meta:
+      collection: cms_pages
+      conditions: null
+      display: boolean
+      display_options:
+        label: noindex
+      field: noindex
+      group: null
+      hidden: false
+      interface: boolean
+      note: Emits noindex, nofollow.
+      options: null
+      readonly: false
+      required: false
+      sort: 17
+      special: []
+      translations: null
+      validation: null
+      validation_message: null
+      width: half
+    schema:
+      name: noindex
+      table: cms_pages
+      data_type: boolean
+      default_value: false
+      max_length: null
+      numeric_precision: null
+      numeric_scale: null
+      is_nullable: false
+      is_unique: false
+      is_primary_key: false
+      is_generated: false
+      generation_expression: null
+      has_auto_increment: false
+      foreign_key_table: null
+      foreign_key_column: null
+  - collection: cms_pages
+    field: blocks
+    type: o2m
+    meta:
+      collection: cms_pages
+      conditions: null
+      display: null
+      display_options: null
+      field: blocks
+      group: null
+      hidden: false
+      interface: list-o2m
+      note: Structured content blocks rendered by type.
+      options:
+        template: '{{block_type}}'
+        enableCreate: true
+        enableSelect: true
+      readonly: false
+      required: false
+      sort: 18
+      special:
+        - o2m
+      translations: null
+      validation: null
+      validation_message: null
+      width: full
+    schema: null
+
+  # ----- cms_blocks -----
+  - collection: cms_blocks
+    field: id
+    type: uuid
+    meta:
+      collection: cms_blocks
+      conditions: null
+      display: null
+      display_options: null
+      field: id
+      group: null
+      hidden: true
+      interface: input
+      note: null
+      options: null
+      readonly: true
+      required: false
+      sort: 1
+      special:
+        - uuid
+      translations: null
+      validation: null
+      validation_message: null
+      width: full
+    schema:
+      name: id
+      table: cms_blocks
+      data_type: uuid
+      default_value: gen_random_uuid()
+      max_length: null
+      numeric_precision: null
+      numeric_scale: null
+      is_nullable: false
+      is_unique: false
+      is_primary_key: true
+      is_generated: false
+      generation_expression: null
+      has_auto_increment: false
+      foreign_key_table: null
+      foreign_key_column: null
+  - collection: cms_blocks
+    field: tenant_id
+    type: string
+    meta:
+      collection: cms_blocks
+      conditions: null
+      display: null
+      display_options: null
+      field: tenant_id
+      group: null
+      hidden: false
+      interface: input
+      note: Stable tenant key or UUID; must match the parent page tenant.
+      options: null
+      readonly: false
+      required: true
+      sort: 2
+      special: []
+      translations: null
+      validation: null
+      validation_message: null
+      width: half
+    schema:
+      name: tenant_id
+      table: cms_blocks
+      data_type: varchar
+      default_value: null
+      max_length: 64
+      numeric_precision: null
+      numeric_scale: null
+      is_nullable: false
+      is_unique: false
+      is_primary_key: false
+      is_generated: false
+      generation_expression: null
+      has_auto_increment: false
+      foreign_key_table: null
+      foreign_key_column: null
+  - collection: cms_blocks
+    field: sort
+    type: integer
+    meta:
+      collection: cms_blocks
+      conditions: null
+      display: null
+      display_options: null
+      field: sort
+      group: null
+      hidden: true
+      interface: input
+      note: null
+      options: null
+      readonly: false
+      required: false
+      sort: 3
+      special: []
+      translations: null
+      validation: null
+      validation_message: null
+      width: half
+    schema:
+      name: sort
+      table: cms_blocks
+      data_type: integer
+      default_value: null
+      max_length: null
+      numeric_precision: 32
+      numeric_scale: 0
+      is_nullable: true
+      is_unique: false
+      is_primary_key: false
+      is_generated: false
+      generation_expression: null
+      has_auto_increment: false
+      foreign_key_table: null
+      foreign_key_column: null
+  - collection: cms_blocks
+    field: page
+    type: uuid
+    meta:
+      collection: cms_blocks
+      conditions: null
+      display: null
+      display_options: null
+      field: page
+      group: null
+      hidden: true
+      interface: select-dropdown-m2o
+      note: Parent page.
+      options: null
+      readonly: false
+      required: true
+      sort: 4
+      special:
+        - m2o
+      translations: null
+      validation: null
+      validation_message: null
+      width: half
+    schema:
+      name: page
+      table: cms_blocks
+      data_type: uuid
+      default_value: null
+      max_length: null
+      numeric_precision: null
+      numeric_scale: null
+      is_nullable: false
+      is_unique: false
+      is_primary_key: false
+      is_generated: false
+      generation_expression: null
+      has_auto_increment: false
+      foreign_key_table: cms_pages
+      foreign_key_column: id
+  - collection: cms_blocks
+    field: block_type
+    type: string
+    meta:
+      collection: cms_blocks
+      conditions: null
+      display: null
+      display_options: null
+      field: block_type
+      group: null
+      hidden: false
+      interface: select-dropdown
+      note: Determines which fields and component are used.
+      options:
+        choices:
+          - { text: Heading, value: heading }
+          - { text: Text, value: text }
+          - { text: Options, value: options }
+          - { text: Steps, value: steps }
+          - { text: FAQ, value: faq }
+          - { text: Comparison, value: comparison }
+          - { text: CTA, value: cta }
+        allowsOther: false
+      readonly: false
+      required: true
+      sort: 5
+      special: []
+      translations: null
+      validation: null
+      validation_message: null
+      width: half
+    schema:
+      name: block_type
+      table: cms_blocks
+      data_type: varchar
+      default_value: null
+      max_length: 24
+      numeric_precision: null
+      numeric_scale: null
+      is_nullable: false
+      is_unique: false
+      is_primary_key: false
+      is_generated: false
+      generation_expression: null
+      has_auto_increment: false
+      foreign_key_table: null
+      foreign_key_column: null
+  - collection: cms_blocks
+    field: heading
+    type: string
+    meta:
+      collection: cms_blocks
+      conditions: null
+      display: null
+      display_options: null
+      field: heading
+      group: null
+      hidden: false
+      interface: input
+      note: Used by heading/comparison/cta blocks.
+      options: null
+      readonly: false
+      required: false
+      sort: 6
+      special: []
+      translations: null
+      validation: null
+      validation_message: null
+      width: full
+    schema:
+      name: heading
+      table: cms_blocks
+      data_type: varchar
+      default_value: null
+      max_length: 255
+      numeric_precision: null
+      numeric_scale: null
+      is_nullable: true
+      is_unique: false
+      is_primary_key: false
+      is_generated: false
+      generation_expression: null
+      has_auto_increment: false
+      foreign_key_table: null
+      foreign_key_column: null
+  - collection: cms_blocks
+    field: body
+    type: text
+    meta:
+      collection: cms_blocks
+      conditions: null
+      display: null
+      display_options: null
+      field: body
+      group: null
+      hidden: false
+      interface: input-rich-text
+      note: Trusted editorial HTML used by text/cta blocks.
+      options: null
+      readonly: false
+      required: false
+      sort: 7
+      special: []
+      translations: null
+      validation: null
+      validation_message: null
+      width: full
+    schema:
+      name: body
+      table: cms_blocks
+      data_type: text
+      default_value: null
+      max_length: null
+      numeric_precision: null
+      numeric_scale: null
+      is_nullable: true
+      is_unique: false
+      is_primary_key: false
+      is_generated: false
+      generation_expression: null
+      has_auto_increment: false
+      foreign_key_table: null
+      foreign_key_column: null
+  - collection: cms_blocks
+    field: items
+    type: json
+    meta:
+      collection: cms_blocks
+      conditions: null
+      display: null
+      display_options: null
+      field: items
+      group: null
+      hidden: false
+      interface: list
+      note: >-
+        Rows for options (label/detail), steps (name/text), faq
+        (question/answer), comparison (dimension/difference).
+      options:
+        template: '{{label}}{{name}}{{question}}{{dimension}}'
+        fields:
+          - field: label
+            name: Label
+            type: string
+          - field: detail
+            name: Detail
+            type: string
+          - field: name
+            name: Name
+            type: string
+          - field: text
+            name: Text
+            type: string
+          - field: question
+            name: Question
+            type: string
+          - field: answer
+            name: Answer
+            type: string
+          - field: dimension
+            name: Dimension
+            type: string
+          - field: difference
+            name: Difference
+            type: string
+      readonly: false
+      required: false
+      sort: 8
+      special:
+        - cast-json
+      translations: null
+      validation: null
+      validation_message: null
+      width: full
+    schema:
+      name: items
+      table: cms_blocks
+      data_type: json
+      default_value: null
+      max_length: null
+      numeric_precision: null
+      numeric_scale: null
+      is_nullable: true
+      is_unique: false
+      is_primary_key: false
+      is_generated: false
+      generation_expression: null
+      has_auto_increment: false
+      foreign_key_table: null
+      foreign_key_column: null
+  - collection: cms_blocks
+    field: cta_label
+    type: string
+    meta:
+      collection: cms_blocks
+      conditions: null
+      display: null
+      display_options: null
+      field: cta_label
+      group: null
+      hidden: false
+      interface: input
+      note: CTA button label.
+      options: null
+      readonly: false
+      required: false
+      sort: 9
+      special: []
+      translations: null
+      validation: null
+      validation_message: null
+      width: half
+    schema:
+      name: cta_label
+      table: cms_blocks
+      data_type: varchar
+      default_value: null
+      max_length: 120
+      numeric_precision: null
+      numeric_scale: null
+      is_nullable: true
+      is_unique: false
+      is_primary_key: false
+      is_generated: false
+      generation_expression: null
+      has_auto_increment: false
+      foreign_key_table: null
+      foreign_key_column: null
+  - collection: cms_blocks
+    field: cta_url
+    type: string
+    meta:
+      collection: cms_blocks
+      conditions: null
+      display: null
+      display_options: null
+      field: cta_url
+      group: null
+      hidden: false
+      interface: input
+      note: CTA target path or URL.
+      options: null
+      readonly: false
+      required: false
+      sort: 10
+      special: []
+      translations: null
+      validation: null
+      validation_message: null
+      width: half
+    schema:
+      name: cta_url
+      table: cms_blocks
+      data_type: varchar
+      default_value: null
+      max_length: 255
+      numeric_precision: null
+      numeric_scale: null
+      is_nullable: true
+      is_unique: false
+      is_primary_key: false
+      is_generated: false
+      generation_expression: null
+      has_auto_increment: false
+      foreign_key_table: null
+      foreign_key_column: null
+relations:
+  - collection: cms_blocks
+    field: page
+    related_collection: cms_pages
+    meta:
+      junction_field: null
+      many_collection: cms_blocks
+      many_field: page
+      one_allowed_collections: null
+      one_collection: cms_pages
+      one_collection_field: null
+      one_deselect_action: nullify
+      sort_field: sort
+    schema:
+      table: cms_blocks
+      column: page
+      foreign_key_table: cms_pages
+      foreign_key_column: id
+      on_update: NO ACTION
+      on_delete: CASCADE
